@@ -181,7 +181,45 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        def minrec(state,ghostID,depth):
+
+            if(ghostID >= state.getNumAgents()):
+                _,currScore = maxrec(state,depth+1)
+                return currScore
+            
+            ghostActions = state.getLegalActions(ghostID)
+
+            if(state.isWin() or state.isLose() or len(ghostActions)==0):
+                return self.evaluationFunction(state)
+
+            ans = None
+            for index in range(len(ghostActions)):
+                currState = state.generateSuccessor(ghostID,ghostActions[index])
+                currScore = minrec(currState,ghostID+1,depth)
+                if(ans==None or ans > currScore):
+                    ans = currScore
+            return ans
+
+        def maxrec(state,depth):
+            
+            playerActions  = state.getLegalActions()
+
+            if(depth == self.depth or state.isWin() or state.isLose() or len(playerActions)==0):
+                return None,self.evaluationFunction(state)
+
+            ans = None
+            for index in range(len(playerActions)):
+                currState = state.generateSuccessor(0,playerActions[index])
+                currScore = minrec(currState,1,depth)
+                if(ans==None or ans[1] < currScore):
+                    ans = [index,currScore]
+            return playerActions[ans[0]],ans[1]
+
+        ans,_ = maxrec(gameState,0)
+        return ans
+            
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -193,7 +231,49 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        def minrec(state,ghostID,depth,alpha,beeta):
+    
+            if(ghostID >= state.getNumAgents()):
+                _,currScore = maxrec(state,depth+1,alpha,beeta)
+                return currScore
+            
+            ghostActions = state.getLegalActions(ghostID)
+
+            if(state.isWin() or state.isLose() or len(ghostActions)==0):
+                return self.evaluationFunction(state)
+
+            ans = None
+            for index in range(len(ghostActions)):
+                currState = state.generateSuccessor(ghostID,ghostActions[index])
+                currScore = minrec(currState,ghostID+1,depth,alpha,beeta)
+                if(ans==None or ans > currScore):
+                    ans = currScore
+                if(ans<alpha): 
+                    return ans
+                beeta = min(beeta,ans)
+            return ans
+
+        def maxrec(state,depth,alpha,beeta):
+            
+            playerActions  = state.getLegalActions()
+
+            if(depth == self.depth or state.isWin() or state.isLose() or len(playerActions)==0):
+                return None,self.evaluationFunction(state)
+
+            ans = None
+            for index in range(len(playerActions)):
+                currState = state.generateSuccessor(0,playerActions[index])
+                currScore = minrec(currState,1,depth,alpha,beeta)
+                if(ans==None or ans[1] < currScore):
+                    ans = [index,currScore]
+                if(ans[1]>beeta):
+                    return playerActions[ans[0]],ans[1]
+                alpha = max(alpha,ans[1])
+            return playerActions[ans[0]],ans[1]
+
+        ans,_ = maxrec(gameState,0,-10**10,10**10)
+        return ans
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -208,7 +288,42 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        def exprec(state,ghostID,depth):
+    
+            if(ghostID >= state.getNumAgents()):
+                _,currScore = maxrec(state,depth+1)
+                return currScore
+            
+            ghostActions = state.getLegalActions(ghostID)
+
+            if(state.isWin() or state.isLose() or len(ghostActions)==0):
+                return self.evaluationFunction(state)
+
+            ans = 0
+            for index in range(len(ghostActions)):
+                currState = state.generateSuccessor(ghostID,ghostActions[index])
+                currScore = exprec(currState,ghostID+1,depth)
+                ans+=currScore
+            return ans/len(ghostActions)
+
+        def maxrec(state,depth):
+            
+            playerActions  = state.getLegalActions()
+
+            if(depth == self.depth or state.isWin() or state.isLose() or len(playerActions)==0):
+                return None,self.evaluationFunction(state)
+
+            ans = None
+            for index in range(len(playerActions)):
+                currState = state.generateSuccessor(0,playerActions[index])
+                currScore = exprec(currState,1,depth)
+                if(ans==None or ans[1] < currScore):
+                    ans = [index,currScore]
+            return playerActions[ans[0]],ans[1]
+
+        ans,_ = maxrec(gameState,0)
+        return ans
 
 def betterEvaluationFunction(currentGameState):
     """
