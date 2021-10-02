@@ -333,7 +333,47 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    newPos = currentGameState.getPacmanPosition()
+        # print("newPos:",type(newPos),'\n',newPos)
+    newFood = currentGameState.getFood()
+    # print("newFood:",type(newFood),'\n',newFood)
+    newGhostStates = currentGameState.getGhostStates()
+    # print("newGhostStates:",type(newGhostStates),'\n',newGhostStates)
+
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+    # print("newScaredTimes:",type(newScaredTimes),'\n',newScaredTimes,'\n')
+
+    length = (newFood.width**2 + newFood.height**2)**0.5
+
+    def linear(dist,maxScore):
+        return maxScore - (maxScore * dist / length)
+
+    def exponential(dist,maxScore,k):
+        return maxScore * 2.71 ** (-1*dist * length / k)
+
+    foodList = newFood.asList()
+    score = currentGameState.getScore()
+    
+    dist = length
+    for food in foodList:
+        dist = min(((food[0]-newPos[0])**2 + (food[1]-newPos[1])**2)**0.5, dist)
+    score += linear(dist,10)
+
+    dist = length
+    scaredDist = length
+    for ghost in newGhostStates:
+        ghostPos = ghost.getPosition()
+        if(ghostPos!=newPos):
+            curr = ((ghostPos[0]-newPos[0])**2 + (ghostPos[1]-newPos[1])**2)**0.5
+            if(ghost.scaredTimer==0):
+                dist = min(curr,dist)
+            else:
+                scaredDist = min(curr,scaredDist)
+
+    score += exponential(dist,-500,10)
+    score += exponential(scaredDist,200,10)
+
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
