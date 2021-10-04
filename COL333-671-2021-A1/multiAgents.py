@@ -96,7 +96,7 @@ class ReflexAgent(Agent):
             return maxScore - (maxScore * dist / length)
 
         def exponential(dist,maxScore,k):
-            return maxScore * 2.71 ** (-1*dist * length / k)
+            return maxScore -( maxScore * 2.71 ** (-1*dist * length / k))
 
         foodList = newFood.asList()
         score = successorGameState.getScore()
@@ -117,8 +117,8 @@ class ReflexAgent(Agent):
                 else:
                     scaredDist = min(curr,scaredDist)
 
-        score += exponential(dist,-500,5)
-        score += exponential(scaredDist,200,5)
+        score += exponential(dist,500,6)
+        score += exponential(scaredDist,-200,6)
 
         return score
 
@@ -279,7 +279,6 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
-
     def getAction(self, gameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
@@ -325,6 +324,27 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         ans,_ = maxrec(gameState,0)
         return ans
 
+class Score:
+
+    def __init__(self,maxScore,maxMetric,constant=0):
+        self.maxScore = maxScore
+        self.maxMetric = maxMetric
+        self.score = 0
+        self.constant = constant
+    
+    def incScore(self,val,fun):
+
+        self.score += fun(val,self.maxScore,self.maxMetric,self.constant)
+      
+def linear(score,maxScore,maxMetric,k=0):
+        return maxScore - (maxScore * score / maxMetric)
+
+def exponential(score,maxScore,maxMetric,k):
+    return maxScore - (maxScore * 2.71 ** (-1*score * maxMetric / k))
+
+def exponential2(score,maxScore,maxMetric,k):
+    return (maxScore * 2.71 ** (-1*score * maxMetric / k))
+
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -333,47 +353,94 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    newPos = currentGameState.getPacmanPosition()
-        # print("newPos:",type(newPos),'\n',newPos)
-    newFood = currentGameState.getFood()
-    # print("newFood:",type(newFood),'\n',newFood)
-    newGhostStates = currentGameState.getGhostStates()
-    # print("newGhostStates:",type(newGhostStates),'\n',newGhostStates)
 
-    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-    # print("newScaredTimes:",type(newScaredTimes),'\n',newScaredTimes,'\n')
+    playerPos = currentGameState.getPacmanPosition()
+    foodGrid = currentGameState.getFood()
+    ghostStates = currentGameState.getGhostStates()
 
-    length = (newFood.width**2 + newFood.height**2)**0.5
-
-    def linear(dist,maxScore):
-        return maxScore - (maxScore * dist / length)
-
-    def exponential(dist,maxScore,k):
-        return maxScore * 2.71 ** (-1*dist * length / k)
-
-    foodList = newFood.asList()
-    score = currentGameState.getScore()
+    statescore = currentGameState.getScore()
+    maxDist = util.manhattanDistance((0,0),(foodGrid.width,foodGrid.height))
     
-    dist = length
-    for food in foodList:
-        dist = min(((food[0]-newPos[0])**2 + (food[1]-newPos[1])**2)**0.5, dist)
-    score += linear(dist,10)
+    ghostDistScore = Score(100,maxDist,5)
+    scaredDistScore = Score(100,maxDist)
+    scaredCountScore = Score(100,len(ghostStates))
+    scaredCount = 0
 
-    dist = length
-    scaredDist = length
-    for ghost in newGhostStates:
-        ghostPos = ghost.getPosition()
-        if(ghostPos!=newPos):
-            curr = ((ghostPos[0]-newPos[0])**2 + (ghostPos[1]-newPos[1])**2)**0.5
-            if(ghost.scaredTimer==0):
-                dist = min(curr,dist)
-            else:
-                scaredDist = min(curr,scaredDist)
+    for ghost in ghostStates:
 
-    score += exponential(dist,-500,10)
-    score += exponential(scaredDist,200,10)
+        dist = util.manhattanDistance(playerPos,ghost.getPosition())
 
+        # Ghosts are far away
+        if(ghost.scaredTimer==0):
+            ghostDistScore.incScore(dist,exponential)
+
+        # Scared ghosts are near
+        # --------might also add metric related to scared time here-------------
+        else:
+            scaredDistScore.incScore(dist,linear)
+            scaredCount += 1
+
+    # scared ghosts more
+    scaredCountScore.incScore(len(ghostStates)-scaredCount,linear)
+
+    try:
+        ExpectimaxAgent.gotInitial
+    except:
+        
+        layout = currentGameState.data.layout
+        ExpectimaxAgent.initFood = layout.food.count()
+        ExpectimaxAgent.initCapsules = len(layout.capsules)
+        ExpectimaxAgent.gotInitial = True
+
+    # less food
+    coinCountScore = Score(100,ExpectimaxAgent.initFood,100)
+    coinCountScore.incScore(currentGameState.getNumFood(),exponential2)
+
+
+    # near capsules
+    capsulePos = currentGameState.getCapsules()
+    dist = maxDist
+    for capsule in capsulePos:
+        dist = min(dist,util.manhattanDistance(capsule,playerPos))
+
+    capsuleDistScore = Score(100,maxDist)
+    capsuleDistScore.incScore(dist,linear)
+
+    # foods are near
+    foodGrid = foodGrid.asList()
+    dist = 0
+    if(len(foodGrid)>0):
+        for food in foodGrid:
+            dist += util.manhattanDistance(playerPos,food)
+        dist /= len(foodGrid)
+
+    coinDistScore = Score(100,maxDist)
+    coinDistScore.incScore(dist,linear)
+
+    # less capsules
+    powerCountScore = Score(100,ExpectimaxAgent.initCapsules)
+    powerCountScore.incScore(len(capsulePos),linear)
+
+    score = 0
+    scoreWeight = [
+        (currentGameState.getScore(),1.0,'actualScore'),
+        (ghostDistScore.score,1.3,'ghostDistScore'),
+        (powerCountScore.score,1.3,'powerCountScore'),
+        (scaredDistScore.score,1.2,'scaredDistScore'),
+        (scaredCountScore.score,1.0,'scaredCountScore'),
+        (capsuleDistScore.score,0.5,'capsuleDistScore'),
+        (coinCountScore.score,1.0,'coinCountScore'),
+        (coinDistScore.score,1.0,'coinDistScore')
+        ]
+
+    # print(currentGameState)
+    for scores in scoreWeight:
+        # print(scores[2],scores[0])
+        score += scores[1]*scores[0]
+        # print(score)
+    # print("final= " ,score,'\n')
     return score
+    # return currentGameState.getScore()
 
 # Abbreviation
 better = betterEvaluationFunction
