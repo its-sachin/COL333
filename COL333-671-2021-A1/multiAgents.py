@@ -72,7 +72,7 @@ class ReflexAgent(Agent):
         The code below extracts some useful information from the state, like the
         remaining food (newFood) and Pacman position after moving (newPos).
         newScaredTimes holds the number of moves that each ghost will remain
-        scared because of Pacman having eaten a power pellet.
+        scared because of Pacman having eaten a capsule pellet.
 
         Print out these variables to see what you're getting, then combine them
         to create a masterful evaluation function.
@@ -116,9 +116,15 @@ class ReflexAgent(Agent):
                     dist = min(curr,dist)
                 else:
                     scaredDist = min(curr,scaredDist)
+        
+        capsulePos = currentGameState.getCapsules()
+        capDist = length
+        for capsule in capsulePos:
+            capDist = min(capDist,util.manhattanDistance(newPos,capsule))
 
         score += exponential(dist,500,6)
         score += exponential(scaredDist,-200,6)
+        score += exponential(capDist,-200,10)
 
         return score
 
@@ -303,7 +309,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             for index in range(len(ghostActions)):
                 currState = state.generateSuccessor(ghostID,ghostActions[index])
                 currScore = exprec(currState,ghostID+1,depth)
-                ans+=currScore
+                ans += currScore
             return ans/len(ghostActions)
 
         def maxrec(state,depth):
@@ -322,19 +328,27 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             return playerActions[ans[0]],ans[1]
 
         ans,_ = maxrec(gameState,0)
+        # print(ans)
         return ans
 
 class Score:
 
-    def __init__(self,maxScore,maxMetric,constant=0):
-        self.maxScore = maxScore
+    def __init__(self,maxMetric,constant=0):
+        self.maxScore = 100
         self.maxMetric = maxMetric
         self.score = 0
         self.constant = constant
+        self.count = 0
     
     def incScore(self,val,fun):
 
+        self.count += 1
         self.score += fun(val,self.maxScore,self.maxMetric,self.constant)
+
+    def normalize(self):
+        if(self.count>0):
+            self.score /= self.count
+
       
 def linear(score,maxScore,maxMetric,k=0):
         return maxScore - (maxScore * score / maxMetric)
@@ -345,6 +359,31 @@ def exponential(score,maxScore,maxMetric,k):
 def exponential2(score,maxScore,maxMetric,k):
     return (maxScore * 2.71 ** (-1*score * maxMetric / k))
 
+def BFS(playerPos,wall,checker):
+
+    queue = util.Queue()
+    queue.push(playerPos)
+
+    while(not queue.isEmpty()):
+        currPos = queue.pop()
+        # print(currPos)
+        if(checker(currPos)):
+            return wall[currPos[0]][currPos[1]]
+
+        adj = [
+            (currPos[0]+1,currPos[1]),
+            (currPos[0],currPos[1]+1),
+            (currPos[0]-1,currPos[1]),
+            (currPos[0],currPos[1]-1)
+        ]
+
+        for pos in adj:
+            if(not wall[pos[0]][pos[1]]):
+                wall[pos[0]][pos[1]] = wall[currPos[0]][currPos[1]]+1
+                queue.push(pos)
+
+    return wall.width*wall.height
+
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -354,16 +393,36 @@ def betterEvaluationFunction(currentGameState):
     """
     "*** YOUR CODE HERE ***"
 
+    if(currentGameState.isWin()):
+        # print('win')
+        # print(currentGameState)
+        return 10**10
+    elif(currentGameState.isLose()):
+        # print('loose')
+        # print(currentGameState)
+        return -10**10
+    
+    try:
+        ExpectimaxAgent.gotInitial
+    except:
+    
+        layout = currentGameState.data.layout
+        ExpectimaxAgent.initFood = layout.food.count()
+        ExpectimaxAgent.initCapsules = len(layout.capsules)
+        ExpectimaxAgent.gotInitial = True
+
     playerPos = currentGameState.getPacmanPosition()
     foodGrid = currentGameState.getFood()
     ghostStates = currentGameState.getGhostStates()
 
     statescore = currentGameState.getScore()
     maxDist = util.manhattanDistance((0,0),(foodGrid.width,foodGrid.height))
+    maxPath = maxDist
     
-    ghostDistScore = Score(100,maxDist,5)
-    scaredDistScore = Score(100,maxDist)
-    scaredCountScore = Score(100,len(ghostStates))
+
+    ghostDistScore = Score(maxDist,6)
+    scaredDistScore = Score(maxDist)
+    scaredCountScore = Score(len(ghostStates))
     scaredCount = 0
 
     for ghost in ghostStates:
@@ -380,67 +439,86 @@ def betterEvaluationFunction(currentGameState):
             scaredDistScore.incScore(dist,linear)
             scaredCount += 1
 
+    ghostDistScore.normalize()
+    scaredDistScore.normalize()
+
     # scared ghosts more
     scaredCountScore.incScore(len(ghostStates)-scaredCount,linear)
 
-    try:
-        ExpectimaxAgent.gotInitial
-    except:
-        
-        layout = currentGameState.data.layout
-        ExpectimaxAgent.initFood = layout.food.count()
-        ExpectimaxAgent.initCapsules = len(layout.capsules)
-        ExpectimaxAgent.gotInitial = True
+    foodCountScore = Score(ExpectimaxAgent.initFood,500)
+    foodDistScore = Score(maxPath)
 
-    # less food
-    coinCountScore = Score(100,ExpectimaxAgent.initFood,100)
-    coinCountScore.incScore(currentGameState.getNumFood(),exponential2)
+    wallGrid = currentGameState.getWalls()
+    wallGrid[playerPos[0]][playerPos[1]] = 0
+    THRESHOLD = 30
 
+    if(ExpectimaxAgent.initFood > 0):   
 
-    # near capsules
-    capsulePos = currentGameState.getCapsules()
-    dist = maxDist
-    for capsule in capsulePos:
-        dist = min(dist,util.manhattanDistance(capsule,playerPos))
+        # less food
+        foodCountScore.incScore(currentGameState.getNumFood(),exponential2)
 
-    capsuleDistScore = Score(100,maxDist)
-    capsuleDistScore.incScore(dist,linear)
+        # foods are near    
+        dist = maxPath    
+        foodList = foodGrid.asList()
 
-    # foods are near
-    foodGrid = foodGrid.asList()
-    dist = 0
-    if(len(foodGrid)>0):
-        for food in foodGrid:
-            dist += util.manhattanDistance(playerPos,food)
-        dist /= len(foodGrid)
+        if(len(foodList)>0):
+            for food in foodList:
+                dist = min(dist,util.manhattanDistance(playerPos,food))
 
-    coinDistScore = Score(100,maxDist)
-    coinDistScore.incScore(dist,linear)
+            if(dist <= THRESHOLD):
+                dist = BFS(playerPos,wallGrid.copy(),lambda pos : foodGrid[pos[0]][pos[1]])
 
-    # less capsules
-    powerCountScore = Score(100,ExpectimaxAgent.initCapsules)
-    powerCountScore.incScore(len(capsulePos),linear)
+        foodDistScore.incScore(dist,linear)
+
+    capsuleCountScore = Score(ExpectimaxAgent.initCapsules)
+    capsuleDistScore = Score(maxPath)
+
+    if(ExpectimaxAgent.initCapsules > 0):
+
+        # near capsules
+        capsulePos = currentGameState.getCapsules()
+        dist = maxPath
+        if(len(capsulePos) > 0):
+            for capsule in capsulePos:
+                dist = min(dist,util.manhattanDistance(playerPos,capsule))
+
+            if(dist <= THRESHOLD):
+                dist = BFS(playerPos,wallGrid.copy(),lambda pos : pos in capsulePos)
+
+        capsuleDistScore.incScore(dist,linear)
+
+        # less capsules
+        # capsuleCountScore.incScore(len(capsulePos),linear)
+        capsuleCountScore.score = -100*len(capsulePos)
 
     score = 0
     scoreWeight = [
-        (currentGameState.getScore(),1.0,'actualScore'),
-        (ghostDistScore.score,1.3,'ghostDistScore'),
-        (powerCountScore.score,1.3,'powerCountScore'),
-        (scaredDistScore.score,1.2,'scaredDistScore'),
-        (scaredCountScore.score,1.0,'scaredCountScore'),
-        (capsuleDistScore.score,0.5,'capsuleDistScore'),
-        (coinCountScore.score,1.0,'coinCountScore'),
-        (coinDistScore.score,1.0,'coinDistScore')
-        ]
+        [currentGameState.getScore(),2.0,'actualScore'],
+        [ghostDistScore.score,1.3,'ghostDistScore'],
+        [capsuleCountScore.score,1.0,'capsuleCountScore'],
+        [scaredDistScore.score,1.0,'scaredDistScore'],
+        [scaredCountScore.score,2.0,'scaredCountScore'],
+        [capsuleDistScore.score,0.5,'capsuleDistScore'],
+        [foodCountScore.score,5.0,'foodCountScore'],
+        [foodDistScore.score,0.5,'foodDistScore']
+    ]
+    
+    if(scaredCount > 0):
+        scoreWeight[5][1] = 0 
+        scoreWeight[2][1] =-1*scoreWeight[2][1]
 
+
+    # print("foods = ",currentGameState.getNumFood())
     # print(currentGameState)
     for scores in scoreWeight:
-        # print(scores[2],scores[0])
+        # print(scores[2],scores[0]*scores[1])
         score += scores[1]*scores[0]
-        # print(score)
+
+    
     # print("final= " ,score,'\n')
     return score
-    # return currentGameState.getScore()
+
+    
 
 # Abbreviation
 better = betterEvaluationFunction
