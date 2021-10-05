@@ -40,15 +40,11 @@ class ReflexAgent(Agent):
         """
         # Collect legal moves and successor states
         legalMoves = gameState.getLegalActions()
-        # print("legalMoves: ",legalMoves)
 
         # Choose one of the best actions
         scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
-        # print("scores: ",scores)
         bestScore = max(scores)
-        # print("bestScore: ",bestScore)
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]        
-        # print("bestIndices: ",bestIndices)
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
 
         if(legalMoves[chosenIndex] == 'Stop'):
@@ -77,18 +73,11 @@ class ReflexAgent(Agent):
         Print out these variables to see what you're getting, then combine them
         to create a masterful evaluation function.
         """
-        # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
-        # print("successorGameState:",type(successorGameState),'\n',successorGameState)
         newPos = successorGameState.getPacmanPosition()
-        # print("newPos:",type(newPos),'\n',newPos)
         newFood = successorGameState.getFood()
-        # print("newFood:",type(newFood),'\n',newFood)
         newGhostStates = successorGameState.getGhostStates()
-        # print("newGhostStates:",type(newGhostStates),'\n',newGhostStates)
-
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-        # print("newScaredTimes:",type(newScaredTimes),'\n',newScaredTimes,'\n')
 
         length = (newFood.width**2 + newFood.height**2)**0.5
 
@@ -394,12 +383,8 @@ def betterEvaluationFunction(currentGameState):
     "*** YOUR CODE HERE ***"
 
     if(currentGameState.isWin()):
-        # print('win')
-        # print(currentGameState)
         return 10**10
     elif(currentGameState.isLose()):
-        # print('loose')
-        # print(currentGameState)
         return -10**10
     
     try:
