@@ -73,7 +73,7 @@ def grade():
     # t = int(input('Times: '))
     t = 5
     maps = [
-        'capsuleClassic','contestClassic','mediumClassic','minimaxClassic',
+        'capsuleClassic','contestClassic','mediumClassic','minimaxClassic','openClassic',
     'originalClassic','powerClassic','smallClassic','testClassic','trappedClassic']
     
     for m in maps: 
