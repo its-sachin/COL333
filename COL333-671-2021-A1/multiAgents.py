@@ -409,22 +409,22 @@ def BFS(playerPos,wall,checker):
     queue = util.Queue()
     queue.push(playerPos)
 
-    capsDone = foodDone = False
-    ans = [0,0]
+    ans = [0]*len(checker)
 
     while(not queue.isEmpty()):
         currPos = queue.pop()
         # print(currPos)
-        if(not foodDone and checker[0](currPos)):
-            ans[0] = wall[currPos[0]][currPos[1]]
-            foodDone = True
+        done = 0
+        for i in range(len(checker)):
+            if(not checker[i][1]):
+                if(checker[i][0](currPos)):
+                    ans[i] = wall[currPos[0]][currPos[1]]
+                    checker[i][1]= True
+                    done += 1
+            else:
+                done+=1
 
-
-        if(not capsDone and checker[1](currPos)):
-            ans[1] = wall[currPos[0]][currPos[1]]
-            capsDone = True
-
-        if(capsDone and foodDone):
+        if(done == len(checker)):
             break
 
         adj = [
@@ -512,7 +512,7 @@ def betterEvaluationFunction(currentGameState):
     wallGrid[playerPos[0]][playerPos[1]] = 0
     THRESHOLD = 30
     numWalls = wallGrid.count()-2*(wallGrid.width+wallGrid.height)
-    checker = [lambda x: True]*2
+    checker = [[lambda x: True,False]]*2
     dist = [maxDist]*2   
 
     # foods are near     
@@ -524,7 +524,7 @@ def betterEvaluationFunction(currentGameState):
 
         if(numWalls >0  and dist[0] <= THRESHOLD):
             dist[0] = -1
-            checker[0] = lambda pos : foodGrid[pos[0]][pos[1]]
+            checker[0][0] = lambda pos : foodGrid[pos[0]][pos[1]]
         
     if(Score.initCapsules > 0):
 
@@ -543,14 +543,12 @@ def betterEvaluationFunction(currentGameState):
 
                 if(numWalls >0  and dist[1] <= THRESHOLD):
                     dist[1] = -1
-                    checker[1] = lambda pos : pos in capsulePos
+                    checker[1][0] = lambda pos : pos in capsulePos
 
     bfs = BFS(playerPos,wallGrid.copy(),checker)
-    if(dist[0]==-1):
-        dist[0] = bfs[0]
-
-    if(dist[1]==-1):
-        dist[1] = bfs[1]
+    for i in range(len(dist)):
+        if(dist[i]==-1):
+            dist[i]=bfs[i]
         
     foodDistScore.incScore(dist[0],linear)
     capsuleDistScore.incScore(dist[1],linear)
