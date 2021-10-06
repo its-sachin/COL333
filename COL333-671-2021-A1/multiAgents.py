@@ -320,59 +320,6 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         ans,_ = maxrec(gameState,0)
         return ans
 
-        # def exprec(state,ghostID,depth,a):
-            
-        #     if(ghostID >= state.getNumAgents()):
-        #         _,currScore = maxrec(state,depth+1,a)
-        #         return currScore
-            
-        #     ghostActions = state.getLegalActions(ghostID)
-
-        #     if(state.isWin() or state.isLose() or len(ghostActions)==0):
-        #         a[depth]['ghostAns'] = self.evaluationFunction(state)
-        #         return self.evaluationFunction(state)
-
-        #     ans = 0
-        #     for index in range(len(ghostActions)):
-        #         currState = state.generateSuccessor(ghostID,ghostActions[index])
-        #         currScore = exprec(currState,ghostID+1,depth,a)
-        #         ans += currScore
-        #         a[depth]['ghost'].append((ghostActions[index],currScore))
-        #     a[depth]['ghostAns'] = ans/len(ghostActions)
-        #     return ans/len(ghostActions)
-
-        # def maxrec(state,depth,a):
-            
-        #     playerActions  = state.getLegalActions()
-
-        #     if(a.get(depth) == None):
-        #         a[depth] = {'ghost': [] , 'player':[], 'playerAns' : None, 'ghostAns' : None}
-
-        #     if(depth == self.depth or state.isWin() or state.isLose() or len(playerActions)==0):
-        #         a[depth]['playerAns'] = self.evaluationFunction(state)
-        #         return None,self.evaluationFunction(state)
-
-        #     ans = None
-        #     for index in range(len(playerActions)):
-        #         currState = state.generateSuccessor(0,playerActions[index])
-        #         currScore = exprec(currState,1,depth,a)
-        #         a[depth]['player'].append((playerActions[index],currScore))
-        #         if(ans==None or ans[1] < currScore):
-        #             ans = [index,currScore]
-        #         a[depth]['playerAns'] = (playerActions[ans[0]],ans[1])
-        #     return playerActions[ans[0]],ans[1]
-        
-        # a= {}
-        # ans,_ = maxrec(gameState,0,a)
-        # for i in a:
-        #     print("depth",i)
-        #     for j in a[i]:
-        #         print(j)
-        #         print(a[i][j])
-        #     print('\n')
-        # print('\n\n')
-        # return ans
-
 class Score:
 
     def __init__(self,maxMetric,constant=0):
@@ -447,6 +394,59 @@ def betterEvaluationFunction(currentGameState):
     evaluation function (question 5).
 
     DESCRIPTION: <write something here so we know what you did>
+
+    I've taken 7 parameters on which the quality of state is evaluated, percent score of 
+    each of the parameter is calculated out of 100 by using appropriate mathematical functions
+    and then at last score corresponding to each parameter is multiplied with its respective 
+    weight and added to the final score. These weights are calculated using extensive testing.
+    The higher this score is better is the state.
+
+    The evaluation of any state can be done on following parameters:-
+
+    1. Ghost Distance from player:
+        a. If ghost is not scared then farther the ghost is better is the state
+            Also, the ghost is harmful if it is at distance of 2-3 tiles only, so that's why I've
+            used inverse exponential function for this parameter  
+        b. If ghost is scared then nearer the ghost is better is the state
+            Unlikely to previous case we need to make sure that the effect of this parameter is 
+            significant even for farther distances, then only player will be attracted towards the ghost 
+            to kill it. That's why I've used linear function for this parameter.
+
+    2. Number of scared ghosts:
+        Lesser the scared ghosts are better the state.
+        This is done to encourage player to eat the scared ghost, not just roam around it.
+        Linear function is used here also.
+    
+    3. Number of foods left: 
+        Lesser the foods left is better the state.
+        Exponential function is used here to give more significance to very less food.
+
+    4. Distance from food:
+        Nearer the foods are better is the state.
+        Closest food path distance is calculated using BFS and linear function is used to find score.
+        Average manhattan distance of all foods is also used for evaluation for bulk effect.
+
+    5. Number of capsules left: 
+        Lesser the capsules left is better the state.
+        This is done to encourage player to eat the capsule.
+        This is not included for evaluation when there is some scared ghost in the state.
+        Linear function is used.
+
+    6. Distance from capsule:
+        Nearer the nearest capsule is better is the state.
+        Nearest capsule path distance is calculated using BFS and linear function is used to find score.
+        This is not included for evaluation when there is some scared ghost in the state.
+
+    So, basically capsule has effect on evaluation of state only if there are no scared ghosts left.
+
+    Some Enhancements to save time:-
+    1. Single BFS is perfomed to compute both capsule and food path distance.
+    2. BFS is not done when minimum manhattan distance is more than a fixed value, manhattan distance is used.
+    3. Initially weight of food distance score is less when there is some scared ghost (player gives more priority
+        to eat ghost rather than eating food) But as time is more than 2s its weight is increased and player looks 
+        for eating the foods and finishing the game.
+
+
     """
     "*** YOUR CODE HERE ***"
 
@@ -460,6 +460,7 @@ def betterEvaluationFunction(currentGameState):
         layout = currentGameState.data.layout
         Score.initFood = layout.food.count()
         Score.initCapsules = len(layout.capsules)
+        Score.initTime = util.time.time()
         Score.gotInitial = True
 
     playerPos = currentGameState.getPacmanPosition()
@@ -473,8 +474,12 @@ def betterEvaluationFunction(currentGameState):
     ghostDistScore = Score(maxDist,6)
     scaredDistScore = Score(maxDist)
     scaredCountScore = Score(len(ghostStates))
-    scaredCount = 0
+    foodCountScore = Score(Score.initFood,500)
+    foodDistScore = Score(maxDist)
+    capsuleCountScore = Score(Score.initCapsules)
+    capsuleDistScore = Score(maxDist)
 
+    scaredCount = 0
     closestGhost = maxDist
 
     for ghost in ghostStates:
@@ -492,18 +497,12 @@ def betterEvaluationFunction(currentGameState):
             scaredDistScore.incScore(dist,linear)
             scaredCount += 1
 
-    ghostDistScore.normalize()
+    # ghostDistScore.normalize()
     if(closestGhost > 1):
         ghostDistScore.incScore(1/closestGhost,linear2)
-    # scaredDistScore.normalize()
 
     # scared ghosts more
     scaredCountScore.incScore(len(ghostStates)-scaredCount,linear)
-
-    foodCountScore = Score(Score.initFood,500)
-    foodDistScore = Score(maxDist)
-    capsuleCountScore = Score(Score.initCapsules)
-    capsuleDistScore = Score(maxDist)
 
     # less food
     foodCountScore.incScore(currentGameState.getNumFood(),exponential2)
@@ -519,8 +518,14 @@ def betterEvaluationFunction(currentGameState):
     foodList = foodGrid.asList()
 
     if(len(foodList)>0):
+        avg = 0
         for food in foodList:
-            dist[0] = min(dist[0],util.manhattanDistance(playerPos,food))
+            currdist = util.manhattanDistance(playerPos,food)
+            dist[0] = min(currdist,dist[0])
+            avg += currdist
+
+        avg/=len(foodList)
+        foodDistScore.incScore(avg,linear)
 
         if(numWalls >0  and dist[0] <= THRESHOLD):
             dist[0] = -1
@@ -557,23 +562,20 @@ def betterEvaluationFunction(currentGameState):
     scoreWeight = [
         [currentGameState.getScore(),2.0,'actualScore'],
         [ghostDistScore.score,1.3,'ghostDistScore'],
-        [scaredDistScore.score,1.0,'scaredDistScore'],
+        [scaredDistScore.score,1.3,'scaredDistScore'],
         [scaredCountScore.score,2.0,'scaredCountScore'],
         [capsuleCountScore.score,1.0,'capsuleCountScore'],
         [capsuleDistScore.score,0.5,'capsuleDistScore'],
         [foodCountScore.score,5.0,'foodCountScore'],
-        [foodDistScore.score,0.5,'foodDistScore']
+        [foodDistScore.score,0.2,'foodDistScore']
     ]
 
+    if(scaredCount > 0 and (util.time.time() - Score.initTime) < 2):
+        scoreWeight[7][1] /= 2
 
-    # print("foods = ",currentGameState.getNumFood())
-    # print(currentGameState)
     for scores in scoreWeight:
-        # print(scores[2],scores[0]*scores[1])
         score += scores[1]*scores[0]
 
-    
-    # print("final= " ,score,'\n')
     return score
 
     
