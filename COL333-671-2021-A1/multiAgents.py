@@ -358,11 +358,23 @@ def BFS(playerPos,wall,checker):
     queue = util.Queue()
     queue.push(playerPos)
 
+    capsDone = foodDone = False
+    ans = [0,0]
+
     while(not queue.isEmpty()):
         currPos = queue.pop()
         # print(currPos)
-        if(checker(currPos)):
-            return wall[currPos[0]][currPos[1]]
+        if(not foodDone and checker[0](currPos)):
+            ans[0] = wall[currPos[0]][currPos[1]]
+            foodDone = True
+
+
+        if(not capsDone and checker[1](currPos)):
+            ans[1] = wall[currPos[0]][currPos[1]]
+            capsDone = True
+
+        if(capsDone and foodDone):
+            break
 
         adj = [
             (currPos[0]+1,currPos[1]),
@@ -376,7 +388,7 @@ def BFS(playerPos,wall,checker):
                 wall[pos[0]][pos[1]] = wall[currPos[0]][currPos[1]]+1
                 queue.push(pos)
 
-    return wall.width*wall.height
+    return ans
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -440,51 +452,53 @@ def betterEvaluationFunction(currentGameState):
     capsuleCountScore = Score(ExpectimaxAgent.initCapsules)
     capsuleDistScore = Score(maxPath)
 
-    if(True):
+    # less food
+    foodCountScore.incScore(currentGameState.getNumFood(),exponential2)
         
-        wallGrid = currentGameState.getWalls()
-        wallGrid[playerPos[0]][playerPos[1]] = 0
-        THRESHOLD = 30
+    wallGrid = currentGameState.getWalls()
+    wallGrid[playerPos[0]][playerPos[1]] = 0
+    THRESHOLD = 30
+    checker = [lambda x: True]*2
+    dist = [maxPath]*2   
 
-        if(ExpectimaxAgent.initFood > 0):   
+    # foods are near     
+    foodList = foodGrid.asList()
 
-            # less food
-            foodCountScore.incScore(currentGameState.getNumFood(),exponential2)
+    if(len(foodList)>0):
+        for food in foodList:
+            dist[0] = min(dist[0],util.manhattanDistance(playerPos,food))
 
-            # foods are near    
-            dist = maxPath    
-            foodList = foodGrid.asList()
-
-            if(len(foodList)>0):
-                for food in foodList:
-                    dist = min(dist,util.manhattanDistance(playerPos,food))
-
-                if(dist <= THRESHOLD):
-                    dist = BFS(playerPos,wallGrid.copy(),lambda pos : foodGrid[pos[0]][pos[1]])
-
-            foodDistScore.incScore(dist,linear)
-
-
-    if(scaredCount == 0):
-
+        if(dist[0] <= THRESHOLD):
+            dist[0] = -1
+            checker[0] = lambda pos : foodGrid[pos[0]][pos[1]]
         
-        if(ExpectimaxAgent.initCapsules > 0):
+    if(ExpectimaxAgent.initCapsules > 0 and scaredCount == 0):
 
-            # near capsules
-            capsulePos = currentGameState.getCapsules()
-            dist = maxPath
-            if(len(capsulePos) > 0):
-                for capsule in capsulePos:
-                    dist = min(dist,util.manhattanDistance(playerPos,capsule))
+        capsulePos = currentGameState.getCapsules()
 
-                if(dist <= THRESHOLD):
-                    dist = BFS(playerPos,wallGrid.copy(),lambda pos : pos in capsulePos)
+        # less capsules
+        # capsuleCountScore.incScore(len(capsulePos),linear)
+        capsuleCountScore.score = -100*len(capsulePos)
 
-            capsuleDistScore.incScore(dist,linear)
+        # near capsules
+        dist[1] = maxPath
+        if(len(capsulePos) > 0):
+            for capsule in capsulePos:
+                dist[1] = min(dist[1],util.manhattanDistance(playerPos,capsule))
 
-            # less capsules
-            # capsuleCountScore.incScore(len(capsulePos),linear)
-            capsuleCountScore.score = -100*len(capsulePos)
+            if(dist[1] <= THRESHOLD):
+                dist[1] = -1
+                checker[1] = lambda pos : pos in capsulePos
+
+    bfs = BFS(playerPos,wallGrid.copy(),checker)
+    if(dist[0]==-1):
+        dist[0] = bfs[0]
+
+    if(dist[1]==-1):
+        dist[1] = bfs[1]
+        
+    foodDistScore.incScore(dist[0],linear)
+    capsuleDistScore.incScore(dist[1],linear)
 
     score = 0
     scoreWeight = [
@@ -498,9 +512,9 @@ def betterEvaluationFunction(currentGameState):
         [foodDistScore.score,0.5,'foodDistScore']
     ]
 
-    if(scaredCount == 0):
-        scoreWeight[6][1] /=2
-        scoreWeight[7][1] /=2
+    # if(scaredCount == 0):
+    #     scoreWeight[6][1] /=2
+    #     scoreWeight[7][1] /=2
 
 
     # print("foods = ",currentGameState.getNumFood())
