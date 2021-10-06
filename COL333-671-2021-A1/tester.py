@@ -71,7 +71,7 @@ def test():
 def grade():
 
     # t = int(input('Times: '))
-    t = 3
+    t = 5
     maps = [
         'capsuleClassic','contestClassic','mediumClassic','minimaxClassic',
     'originalClassic','powerClassic','smallClassic','testClassic','trappedClassic']
@@ -94,6 +94,6 @@ def timetaken():
     print('\nTime Taken : ' + str(endTime-startTime) + '\n' )
 
 # test()
-# grade()
-timetaken()
+grade()
+# timetaken()
     

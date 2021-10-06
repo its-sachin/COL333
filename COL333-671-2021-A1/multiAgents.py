@@ -287,11 +287,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     
             if(ghostID >= state.getNumAgents()):
                 _,currScore = maxrec(state,depth+1)
+                # print('ghost',ghostID,': ',currScore)
                 return currScore
             
             ghostActions = state.getLegalActions(ghostID)
 
             if(state.isWin() or state.isLose() or len(ghostActions)==0):
+                # print('ghost',ghostID,': ',self.evaluationFunction(state))
                 return self.evaluationFunction(state)
 
             ans = 0
@@ -299,6 +301,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 currState = state.generateSuccessor(ghostID,ghostActions[index])
                 currScore = exprec(currState,ghostID+1,depth)
                 ans += currScore
+            # print('ghost',ghostID,': ',ans/len(ghostActions))
             return ans/len(ghostActions)
 
         def maxrec(state,depth):
@@ -306,6 +309,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             playerActions  = state.getLegalActions()
 
             if(depth == self.depth or state.isWin() or state.isLose() or len(playerActions)==0):
+                # print('max at depth ',depth,': ',self.evaluationFunction(state))
                 return None,self.evaluationFunction(state)
 
             ans = None
@@ -314,10 +318,11 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 currScore = exprec(currState,1,depth)
                 if(ans==None or ans[1] < currScore):
                     ans = [index,currScore]
+            # print('max at depth ',depth,': ',ans[1])
             return playerActions[ans[0]],ans[1]
 
         ans,_ = maxrec(gameState,0)
-        # print(ans)
+        # print(ans,_,'\n')
         return ans
 
 class Score:
@@ -382,10 +387,10 @@ def betterEvaluationFunction(currentGameState):
     """
     "*** YOUR CODE HERE ***"
 
-    if(currentGameState.isWin()):
-        return 10**10
-    elif(currentGameState.isLose()):
-        return -10**10
+    # if(currentGameState.isWin()):
+    #     return 10**8
+    if(currentGameState.isLose()):
+        return -10**8
     
     try:
         ExpectimaxAgent.gotInitial
@@ -432,65 +437,70 @@ def betterEvaluationFunction(currentGameState):
 
     foodCountScore = Score(ExpectimaxAgent.initFood,500)
     foodDistScore = Score(maxPath)
-
-    wallGrid = currentGameState.getWalls()
-    wallGrid[playerPos[0]][playerPos[1]] = 0
-    THRESHOLD = 30
-
-    if(ExpectimaxAgent.initFood > 0):   
-
-        # less food
-        foodCountScore.incScore(currentGameState.getNumFood(),exponential2)
-
-        # foods are near    
-        dist = maxPath    
-        foodList = foodGrid.asList()
-
-        if(len(foodList)>0):
-            for food in foodList:
-                dist = min(dist,util.manhattanDistance(playerPos,food))
-
-            if(dist <= THRESHOLD):
-                dist = BFS(playerPos,wallGrid.copy(),lambda pos : foodGrid[pos[0]][pos[1]])
-
-        foodDistScore.incScore(dist,linear)
-
     capsuleCountScore = Score(ExpectimaxAgent.initCapsules)
     capsuleDistScore = Score(maxPath)
 
-    if(ExpectimaxAgent.initCapsules > 0):
+    if(True):
+        
+        wallGrid = currentGameState.getWalls()
+        wallGrid[playerPos[0]][playerPos[1]] = 0
+        THRESHOLD = 30
 
-        # near capsules
-        capsulePos = currentGameState.getCapsules()
-        dist = maxPath
-        if(len(capsulePos) > 0):
-            for capsule in capsulePos:
-                dist = min(dist,util.manhattanDistance(playerPos,capsule))
+        if(ExpectimaxAgent.initFood > 0):   
 
-            if(dist <= THRESHOLD):
-                dist = BFS(playerPos,wallGrid.copy(),lambda pos : pos in capsulePos)
+            # less food
+            foodCountScore.incScore(currentGameState.getNumFood(),exponential2)
 
-        capsuleDistScore.incScore(dist,linear)
+            # foods are near    
+            dist = maxPath    
+            foodList = foodGrid.asList()
 
-        # less capsules
-        # capsuleCountScore.incScore(len(capsulePos),linear)
-        capsuleCountScore.score = -100*len(capsulePos)
+            if(len(foodList)>0):
+                for food in foodList:
+                    dist = min(dist,util.manhattanDistance(playerPos,food))
+
+                if(dist <= THRESHOLD):
+                    dist = BFS(playerPos,wallGrid.copy(),lambda pos : foodGrid[pos[0]][pos[1]])
+
+            foodDistScore.incScore(dist,linear)
+
+
+    if(scaredCount == 0):
+
+        
+        if(ExpectimaxAgent.initCapsules > 0):
+
+            # near capsules
+            capsulePos = currentGameState.getCapsules()
+            dist = maxPath
+            if(len(capsulePos) > 0):
+                for capsule in capsulePos:
+                    dist = min(dist,util.manhattanDistance(playerPos,capsule))
+
+                if(dist <= THRESHOLD):
+                    dist = BFS(playerPos,wallGrid.copy(),lambda pos : pos in capsulePos)
+
+            capsuleDistScore.incScore(dist,linear)
+
+            # less capsules
+            # capsuleCountScore.incScore(len(capsulePos),linear)
+            capsuleCountScore.score = -100*len(capsulePos)
 
     score = 0
     scoreWeight = [
         [currentGameState.getScore(),2.0,'actualScore'],
         [ghostDistScore.score,1.3,'ghostDistScore'],
-        [capsuleCountScore.score,1.0,'capsuleCountScore'],
         [scaredDistScore.score,1.0,'scaredDistScore'],
         [scaredCountScore.score,2.0,'scaredCountScore'],
+        [capsuleCountScore.score,1.0,'capsuleCountScore'],
         [capsuleDistScore.score,0.5,'capsuleDistScore'],
         [foodCountScore.score,5.0,'foodCountScore'],
         [foodDistScore.score,0.5,'foodDistScore']
     ]
-    
-    if(scaredCount > 0):
-        scoreWeight[5][1] = 0 
-        scoreWeight[2][1] =-1*scoreWeight[2][1]
+
+    if(scaredCount == 0):
+        scoreWeight[6][1] /=2
+        scoreWeight[7][1] /=2
 
 
     # print("foods = ",currentGameState.getNumFood())
