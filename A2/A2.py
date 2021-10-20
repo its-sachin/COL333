@@ -6,9 +6,7 @@ class CSP:
 
         self.N = int(line[0])
         self.D = int(line[1])
-        self.m = int(line[2])
-        self.a = int(line[3])
-        self.e = int(line[4])
+        self.bound = {'M':int(line[2]),'A': int(line[3]),'E': int(line[4])}
 
         if(len(line) == 5):
             self.type = 1
@@ -21,12 +19,15 @@ class CSP:
         self.dict = {}
         for i in range(1,self.N+1):
             self.dict[i] = []
+        self.count = {'M':[0]*self.D,'A':[0]*self.D,'E':[0]*self.D}
         self.values = ['M','A','E','R']
 
     def isComplete(self):
         return self.last > self.N
 
     def addVal(self,value):
+        if(value != 'R'):
+            self.count[value][len(self.dict[self.last])] += 1
         self.dict[self.last].append(value)
         if(len(self.dict[self.last]) == self.D):
             self.last += 1
@@ -35,6 +36,8 @@ class CSP:
         if(len(self.dict[self.last]) == 0):
             self.last -= 1
         self.dict[self.last].pop()
+        if(value != 'R'):
+            self.count[value][len(self.dict[self.last])] -= 1
 
     def isConsistent(self,value):
 
@@ -49,15 +52,18 @@ class CSP:
                 return False
 
         day = len(self.dict[self.last])
-        # print(self.dict)
-        count = {'M':0,'A':0,'E':0,'R':0}
-        count[value] +=1
-        
-        for i in range(1,self.last):
-            count[self.dict[i][day]] += 1
 
-        if( (count['M'] > self.m or count['A'] > self.a or count['E'] > self.e) or ((self.last == self.N) and (count['M'] != self.m or count['A'] != self.a or count['E'] != self.e))):
-            return False
+        if(self.last == self.N):
+            for i in self.bound:
+                c=value==i
+                if(self.bound[i] != self.count[i][day] + c):
+                    return False
+
+        else:
+            for i in self.bound:
+                c=value==i
+                if(self.bound[i] < self.count[i][day] + c or self.bound[i] > self.count[i][day] + c + self.D - self.last):
+                    return False
 
         return True
 
