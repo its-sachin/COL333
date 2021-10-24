@@ -2,12 +2,12 @@ import random
 import subprocess
 
 def test():
-    N =random.randint(1,30)
-    D = random.randint(1,30)
+    N =random.randint(30,50)
+    D = random.randint(30,50)
     while True:
-        m = random.randint(0,30)
-        a = random.randint(0,30)
-        e = random.randint(0,30)
+        m = random.randint(10,50)
+        a = random.randint(10,50)
+        e = random.randint(10,50)
 
         if(m+a+e <= N):
             break
@@ -20,13 +20,13 @@ def test():
 def extensive():
     file = open('ques1_t1.txt','w+')
     file.write('N,D,m,a,e\n')
-    for i in range(20):
-        N =random.randint(1,30)
-        D = random.randint(1,30)
+    for i in range(1000):
+        N =random.randint(1,50)
+        D = random.randint(1,50)
         while True:
-            m = random.randint(0,30)
-            a = random.randint(0,30)
-            e = random.randint(0,30)
+            m = random.randint(0,50)
+            a = random.randint(0,50)
+            e = random.randint(0,50)
 
             if(m+a+e <= N):
                 break
@@ -35,8 +35,8 @@ def extensive():
     file.close()
     subprocess.run('python A2.py ques1_t1.txt')
 
-test()
-
+# test()
+extensive()
 
 
 

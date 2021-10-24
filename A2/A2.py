@@ -27,15 +27,17 @@ class CSP:
 
         self.assignment = {}
 
-        self.count = {}
+        self.count = {'R':{},'days':{}}
         for i in range(1,self.d+1):
-            self.count[i] = {'A':0,'E':0,'M':0,'R':0,'nurse':0}
+            self.count['days'][i] = {'A':0,'E':0,'M':0,'R':0,'nurse':0}
+        for i in range(1,self.N+1):
+            self.count['R'][i] = 0
     
     def checkBounds(self,value,day,notAdded=True):
-        d = self.count[day]['A'] + self.count[day]['E'] + self.count[day]['R'] + self.count[day]['M']
+        d = self.count['days'][day]['A'] + self.count['days'][day]['E'] + self.count['days'][day]['R'] + self.count['days'][day]['M']
         for i in self.bound:
             c=(notAdded and value==i)
-            if((self.count[day]['nurse']+c == self.N and self.bound[i] != self.count[day][i] + c) or (self.count[day]['nurse']+c != self.N and (self.bound[i] < self.count[day][i] + c or self.bound[i] > self.N -d -1 +c + self.count[day][i] ))):
+            if((self.count['days'][day]['nurse']+c == self.N and self.bound[i] != self.count['days'][day][i] + c) or (self.count['days'][day]['nurse']+c != self.N and (self.bound[i] < self.count['days'][day][i] + c or self.bound[i] > self.N -d -1 +c + self.count['days'][day][i] ))):
                 return False
         return True
 
@@ -79,96 +81,6 @@ class CSP:
 
         return self.checkRest(value,self.nextDay) and self.checkBounds(value,self.nextDay)
 
-    def revConsistent(self,xi,xj,value1,value2,domain):
-
-        nurse = self.nextNurse
-        if(not (self.checkBounds(value1,xi,self.assignment.get(nurse) == None or self.assignment[nurse].get(xi) == None) or
-                self.checkBounds(value2,xj,self.assignment.get(nurse) == None or self.assignment[nurse].get(xj) == None))):
-            # print('inference false for bound at [',nurse,xi,value1,'] [',nurse,xj,value2,']')
-            return False
-
-        if(xi>xj):
-            xi,xj=xj,xi
-            value1,value2=value2,value1
-
-        if(value1 == 'M' == value2 or (value1 == 'E' and value2 == 'M')):
-            # print('inference false for consec at [',nurse,xi,value1,'] [',nurse,xj,value2,']')
-            return False
-
-        rem = xi%7
-        if(value1 != 'R'):
-            if(rem!=0):
-                l,u = xi - rem + 1, xi - rem + 8
-            else:
-                l,u = xi - 6, xi
-            satisfy = False
-            for i in range(l,u):
-                if(i != xi and ((i == xj and value2 == 'R') or ( i != xj and (i <=0 or i > self.d or'R' in domain[i])))):
-                    satisfy = True
-                    break
-            if (not satisfy):
-                # print('inference false for rest at [',nurse,xi,value1,'] [',nurse,xj,value2,']')
-                return False
-        if(rem == 0 and value2 != 'R'):
-            l,u = xj+1,xj+7
-            satisfy = False
-            for i in range(l,u):
-                if(i > self.d or 'R' in domain[i]):
-                    satisfy = True
-                    break
-            if(not satisfy):
-                # print('inference false for rst2 at [',nurse,xi,value1,'] [',nurse,xj,value2,']')
-                return False
-
-
-        return True
-
-    def revise(self,xi,xj,domain):
-        revised = False
-        index=0
-        while(index < len(domain[xi])):
-            value1 = domain[xi][index]
-            satisfy = False
-            for value2 in domain[xj]:
-                if(self.revConsistent(xi,xj,value1,value2,domain)):
-                    satisfy = True
-                    break
-
-            if(not satisfy):
-                # print('interference removing',value1,xi)
-                domain[xi].pop(index)
-                index -= 1
-                revised = True
-            index+=1
-        return revised
-
-    def inference(self,value):
-        queue = deque()
-        domain = {}
-
-        i = self.nextNurse
-        for j in range(1,self.d+1):
-            if(self.assignment.get(i) != None and self.assignment[i].get(j)!=None):
-                domain[j] = [self.assignment[i][j]]
-            else:   
-                domain[j] = ['A','R','E','M']
-        domain[self.nextDay] = [value]
- 
-        for i in range(1,self.d):
-            queue.append([i,i+1])
-
-        while(len(queue)>0):
-            xi,xj = queue.popleft()
-            if(self.revise(xi,xj,domain)):
-                if(len(domain[xi]) == 0):
-                    return False
-                if(xj == xi+1 and xi >=2):
-                    queue.append([xi-1,xi])
-                elif(xj == xi-1 and xi <= self.d-1):
-                    queue.append([xi+1,xi])
-                
-        return True
-
     def isComplete(self):
         return self.assigned >= self.N*self.d
 
@@ -177,64 +89,35 @@ class CSP:
         prob = []
 
         for i in self.bound:
-            prob.append([self.count[pos[1]][i],i])
+            if(self.bound[i] != 0):
+
+                restScore = 0
+                arScore = 0
+                if(i=='R'and pos[1] >=2):
+                    if(self.count['R'][pos[0]] == 0):
+                        restScore=-1.4
+                    else:
+                        restScore=1.2
+            
+                elif(i == 'M' and pos[1] >=2):
+                    prev = self.assignment[pos[0]][pos[1]-1]
+                    if(prev == 'A' or prev == 'R'):
+                        arScore=1.5
+    
+                remScore = self.count['days'][pos[1]][i]/self.bound[i]
+                
+                score = 1*restScore + -1*arScore + 1*remScore
+                # print(pos,i,restScore,arScore,remScore)
+                prob.append([score,i])
 
         out=[]
         prob.sort()
         for i in prob:
             out.append(i[1])
-        # out=['M','E','A','R']
+        # print(pos,out)
         return out
 
     def setNext(self):
-
-        # def setNew():
-        #     for i in range(1,self.N+1):
-        #         if(self.assignment.get(i) ==None or self.assignment[i].get(self.nextDay) == None):
-        #             self.nextNurse = i
-        #             return
-
-        #     for i in range(1,self.d+1):
-        #         if(self.assignment[self.nextNurse].get(i) == None):
-        #             self.nextDay = i
-        #             return
-        
-        #     for i in range(1,self.N+1):
-        #         for j in range(1,self.d+1):
-        #             if(self.assignment.get(i) == None or self.assignment[i].get(j) == None):
-        #                 self.nextNurse,self.nextDay = i,j
-        #                 return
-
-        # def getneigh(i,j):
-        #     if(self.nextDay+j > 0 and self.nextDay+j <= self.d and self.nextNurse+i > 0 and self.nextNurse+i <= self.N and
-        #         (self.assignment.get(self.nextNurse+i) == None or self.assignment[self.nextNurse+i].get(self.nextDay+j) == None)):
-        #         return True
-
-        #     return False
-
-        # curr = self.assignment[self.nextNurse][self.nextDay]
-        # if(curr == 'A' or curr == 'R'):
-        #     if(getneigh(1,0)):
-        #         self.nextNurse +=1
-        #     elif(getneigh(-1,0)):
-        #         self.nextNurse -=1
-        #     elif(getneigh(0,1)):
-        #         self.nextDay +=1
-        #     elif(getneigh(0,-1)):
-        #         self.nextDay -=1
-        #     else:
-        #         setNew()
-        # else:
-        #     if(getneigh(0,1)):
-        #         self.nextDay +=1
-        #     elif(getneigh(0,-1)):
-        #         self.nextDay -=1
-        #     elif(getneigh(1,0)):
-        #         self.nextNurse +=1
-        #     elif(getneigh(-1,0)):
-        #         self.nextNurse -=1
-        #     else:
-        #         setNew()
 
         if(self.nextDay%2==0):
             self.next = -1
@@ -249,8 +132,11 @@ class CSP:
     def addVal(self,value):
 
         self.assigned += 1
-        self.count[self.nextDay][value] += 1
-        self.count[self.nextDay]['nurse'] += 1
+        self.count['days'][self.nextDay][value] += 1
+        self.count['days'][self.nextDay]['nurse'] += 1
+
+        if(value=='R'):
+            self.count['R'][self.nextNurse] += 1
 
         if(self.assignment.get(self.nextNurse) == None):
             self.assignment[self.nextNurse] = {self.nextDay:value}
@@ -259,8 +145,10 @@ class CSP:
 
     def removeVal(self,value):
         self.assignment[self.nextNurse][self.nextDay] = None
-        self.count[self.nextDay][value] -= 1
-        self.count[self.nextDay]['nurse'] -= 1
+        self.count['days'][self.nextDay][value] -= 1
+        self.count['days'][self.nextDay]['nurse'] -= 1
+        if(value=='R'):
+            self.count['R'][self.nextNurse] -= 1
         self.assigned -= 1
 
     def build(self):
@@ -305,7 +193,7 @@ class CSP:
             self.st = time.time()
         # if(time.time()-self.st > 200):
         #     return -1
-        print(round(100*self.assigned/(self.N*self.d),2),'\t',round(time.time()-self.st,2),end='\r')
+        # print(round(100*self.assigned/(self.N*self.d),2),'\t',round(time.time()-self.st,2),end='\r')
 
         for value in self.getValues():
             if(self.isConsistent(value)):
@@ -330,7 +218,7 @@ class CSP:
 
     def solve(self):
         if(self.__isSolvable()):
-            print('SOLVING')
+            # print('SOLVING')
             return self.backtrackingSearch()
 
     def sanity(self):
@@ -387,11 +275,8 @@ def pr(csp):
         print('NOT POSSIBLE')
         return
     else:
-        # if(d==-1):
-        #     print('TIMEOUT')
-        # else:
-        #     print('POSSIBLE')
-        csp.sanity()
+        print('POSSIBLE')
+        # csp.sanity()
 
 st = time.time()
 while(line):
