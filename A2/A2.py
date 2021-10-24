@@ -9,6 +9,8 @@ class CSP:
 
         self.N = int(line[0])
         self.D = int(line[1])
+        self.d = int(line[1])
+        self.d = min(self.D,8)
         self.bound = {'M':int(line[2]),'A': int(line[3]),'E': int(line[4]), 'R': self.N - int(line[2]) -int(line[3])-int(line[4])}
 
         if(len(line) == 5):
@@ -21,13 +23,13 @@ class CSP:
         self.nextNurse =  1
         self.nextDay = 1
         self.next = 1
+        self.assigned = 0
 
         self.assignment = {}
 
         self.count = {}
-        for i in range(1,self.D+1):
+        for i in range(1,self.d+1):
             self.count[i] = {'A':0,'E':0,'M':0,'R':0,'nurse':0}
-        self.assigned = 0
     
     def checkBounds(self,value,day,notAdded=True):
         d = self.count[day]['A'] + self.count[day]['E'] + self.count[day]['R'] + self.count[day]['M']
@@ -62,7 +64,7 @@ class CSP:
             except:
                 pass
 
-        if(self.nextDay <= self.D -1):
+        if(self.nextDay <= self.d -1):
             try:
                 if('M' == value == self.assignment[self.nextNurse][self.nextDay+1]):
                     return False
@@ -101,7 +103,7 @@ class CSP:
                 l,u = xi - 6, xi
             satisfy = False
             for i in range(l,u):
-                if(i != xi and ((i == xj and value2 == 'R') or ( i != xj and (i <=0 or i > self.D or'R' in domain[nurse][i])))):
+                if(i != xi and ((i == xj and value2 == 'R') or ( i != xj and (i <=0 or i > self.d or'R' in domain[i])))):
                     satisfy = True
                     break
             if (not satisfy):
@@ -111,7 +113,7 @@ class CSP:
             l,u = xj+1,xj+7
             satisfy = False
             for i in range(l,u):
-                if(i > self.D or 'R' in domain[nurse][i]):
+                if(i > self.d or 'R' in domain[i]):
                     satisfy = True
                     break
             if(not satisfy):
@@ -145,46 +147,94 @@ class CSP:
         domain = {}
 
         i = self.nextNurse
-        for j in range(1,self.D+1):
+        for j in range(1,self.d+1):
             if(self.assignment.get(i) != None and self.assignment[i].get(j)!=None):
                 domain[j] = [self.assignment[i][j]]
             else:   
                 domain[j] = ['A','R','E','M']
         domain[self.nextDay] = [value]
-        # maybe narraw it down
-        
-        # for n in range(1,self.N+1):
-        for i in range(1,self.D):
+ 
+        for i in range(1,self.d):
             queue.append([i,i+1])
 
         while(len(queue)>0):
             xi,xj = queue.popleft()
             if(self.revise(xi,xj,domain)):
-                if(len(domain[xi[0]][xi[1]]) == 0):
+                if(len(domain[xi]) == 0):
                     return False
                 if(xj == xi+1 and xi >=2):
                     queue.append([xi-1,xi])
-                elif(xj == xi-1 and xi <= self.D-1):
+                elif(xj == xi-1 and xi <= self.d-1):
                     queue.append([xi+1,xi])
                 
         return True
 
     def isComplete(self):
-        return self.assigned >= self.N*self.D
+        return self.assigned >= self.N*self.d
 
     def getValues(self):
         pos = (self.nextNurse,self.nextDay)
         prob = []
+
         for i in self.bound:
             prob.append([self.count[pos[1]][i],i])
 
-        prob.sort(reverse=True)
         out=[]
+        prob.sort()
         for i in prob:
             out.append(i[1])
+        # out=['M','E','A','R']
         return out
 
     def setNext(self):
+
+        # def setNew():
+        #     for i in range(1,self.N+1):
+        #         if(self.assignment.get(i) ==None or self.assignment[i].get(self.nextDay) == None):
+        #             self.nextNurse = i
+        #             return
+
+        #     for i in range(1,self.d+1):
+        #         if(self.assignment[self.nextNurse].get(i) == None):
+        #             self.nextDay = i
+        #             return
+        
+        #     for i in range(1,self.N+1):
+        #         for j in range(1,self.d+1):
+        #             if(self.assignment.get(i) == None or self.assignment[i].get(j) == None):
+        #                 self.nextNurse,self.nextDay = i,j
+        #                 return
+
+        # def getneigh(i,j):
+        #     if(self.nextDay+j > 0 and self.nextDay+j <= self.d and self.nextNurse+i > 0 and self.nextNurse+i <= self.N and
+        #         (self.assignment.get(self.nextNurse+i) == None or self.assignment[self.nextNurse+i].get(self.nextDay+j) == None)):
+        #         return True
+
+        #     return False
+
+        # curr = self.assignment[self.nextNurse][self.nextDay]
+        # if(curr == 'A' or curr == 'R'):
+        #     if(getneigh(1,0)):
+        #         self.nextNurse +=1
+        #     elif(getneigh(-1,0)):
+        #         self.nextNurse -=1
+        #     elif(getneigh(0,1)):
+        #         self.nextDay +=1
+        #     elif(getneigh(0,-1)):
+        #         self.nextDay -=1
+        #     else:
+        #         setNew()
+        # else:
+        #     if(getneigh(0,1)):
+        #         self.nextDay +=1
+        #     elif(getneigh(0,-1)):
+        #         self.nextDay -=1
+        #     elif(getneigh(1,0)):
+        #         self.nextNurse +=1
+        #     elif(getneigh(-1,0)):
+        #         self.nextNurse -=1
+        #     else:
+        #         setNew()
 
         if(self.nextDay%2==0):
             self.next = -1
@@ -213,6 +263,18 @@ class CSP:
         self.count[self.nextDay]['nurse'] -= 1
         self.assigned -= 1
 
+    def build(self):
+        conv = []
+        pos = {'R':[],'E':[],'A':[],'M':[]}
+        for i in range(1,self.N+1):
+            pos[self.assignment[i][1]].append(i)
+        for i in range(1,self.N+1):
+            conv.append(pos[self.assignment[i][8]].pop())
+
+        for i in range(9,self.D+1):
+            for j in range(1,self.N+1):
+                self.assignment[j][i] = self.assignment[conv[j-1]][i-7]
+
     def __isSolvable(self):
 
         if(self.D>=7 and 7*self.bound['R'] < self.N):
@@ -229,6 +291,8 @@ class CSP:
 
     def backtrackingSearch(self):
         if (self.isComplete()):
+            if(self.D > self.d):
+                self.build()
             return self.assignment
 
         # print('Assigment\n')
@@ -241,10 +305,10 @@ class CSP:
             self.st = time.time()
         # if(time.time()-self.st > 200):
         #     return -1
-        print(round(100*self.assigned/(self.N*self.D),2),'\t',round(time.time()-self.st,2),end='\r')
+        print(round(100*self.assigned/(self.N*self.d),2),'\t',round(time.time()-self.st,2),end='\r')
 
         for value in self.getValues():
-            if(self.isConsistent(value) and self.isConsistent(value) ):
+            if(self.isConsistent(value)):
 
                 prev = (self.nextNurse,self.nextDay)
                 self.addVal(value) 
