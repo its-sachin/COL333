@@ -1,3 +1,5 @@
+import time
+
 class CSP:
     
     def __init__(self,line):
@@ -186,10 +188,141 @@ b = {
 30:{1: 'A', 2: 'R', 3: 'A', 4: 'R', 5: 'A', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'E', 15: 'A', 16: 'R', 17: 'A', 18: 'R', 19: 'A', 20: 'R', 21: 'M'}
 }
 
-for i in a:
-    for j in a[i]:
-        if(a[i][j] != b[i][j]):
-            print('NO',i,j)
+# for i in a:
+#     for j in a[i]:
+#         if(a[i][j] != b[i][j]):
+#             print('NO',i,j)
             
-print('YES')
+# print('YES')
+
+class LocalSearch:
+    def __init__(self,maxDict,maxWeight,count,s):
+        self.startTime = time.time()
+        self.maxDict = maxDict
+        self.maxWeight = maxWeight
+        self.count = count
+        self.N = len(maxDict)
+        self.D = len(maxDict[1])
+        self.S = s
+        self.bound = {'M':10,'A': 5,'E': 5, 'R': 10}
+        # self.bound = {'M':2,'A': 1,'E': 1, 'R': 1}
+
+    def print(self,e,x):
+        print('\nWEIGHT:',x)
+        for i in e:
+            print(i,': [',e[i],']')
+
+
+    def solve(self,E,X):
+        maxNeighbours = {}
+        day = 1
+        gotBoth = False
+        while(day<= self.D and not gotBoth):
+            currTop,currBottom=[],[]
+
+            for nurse in range(1,self.N+1):
+                val = E[nurse][day] 
+                if(nurse<=self.S):
+                    if(val== 'A' or (val == 'R' and ((day-1)/7>=len(self.count[0]) or self.count[nurse][(day-1)/7] >1) )):
+                        if(day==self.D or E[nurse][day+1]=='E'):
+                            currTop.append([0,nurse])
+                        else:
+                            currTop.append([5,nurse])
+                else:
+                    if(len(currTop)==0):
+                        break
+                    if(val=='M' or val=='E'):
+                        if(val=='E'):
+                            currBottom.append([0,nurse])
+                            break
+                        else:
+                            currBottom.append([5,nurse])
+            if(len(currTop) > 0 and len(currBottom) > 0):
+                maxNeighbours[day] = [currTop,currBottom]
+            day+=1
+
+        print(maxNeighbours)
+
+        def isPossible(up,bp,day):
+            if(day<self.D and E[up][day+1]=='M'):
+                return False
+            if(E[up][day] == 'M' and day>1 and (E[up][day-1] == 'E' or E[up][day-1] == 'M')):
+                return False
+            return True
+
+        if(len(maxNeighbours)>0):
+            
+            pos=[]
+            for day in maxNeighbours:
+                currTop,currBottom=  maxNeighbours[day][0],maxNeighbours[day][1]
+                for t in currTop:
+                    for b in currBottom:
+                        if(isPossible(t[1],b[1],day) and (pos==[] or t[0]+b[0] < pos[2])):
+                            pos = [ [t[1],day], [b[1],day], t[0] + b[0] ]   
+            if(len(pos)>0):
+                print('exchanging',pos)
+                if(E[pos[0][0]][pos[0][1]]=='R' and (pos[0][1]-1)/7<len(self.count[0]) ):
+                    self.count[pos[0][0]][(pos[0][1]-1)/7]-=1
+                E[pos[0][0]][pos[0][1]],E[pos[1][0]][pos[1][1]] = E[pos[1][0]][pos[1][1]],E[pos[0][0]][pos[0][1]]
+                X*=2 
+                self.maxWeight,self.maxDict = X,E
+                # self.print(E,X)
+                self.sanity(d)
+                print('\n\n')
+                self.solve(E,X)
+
+    def sanity(self,d):
+        count = {'M':[0]*self.D,'A':[0]*self.D,'E':[0]*self.D,'R':[0]*self.D}
+        for nurse in d:
+            print(d[nurse])
+            for day in d[nurse]:
+                if(day < self.D and ( d[nurse][day] == d[nurse][day+1] == 'M' or (d[nurse][day] == 'E' and d[nurse][day+1] == 'M'))):
+                    print('NURSE',nurse,' EM/MM AT',day)
+                    return
+                val=d[nurse][day]
+                count[val][day-1] += 1
+        for i in count:
+            for j in count[i]:
+                if(i != 'R' and j != self.bound[i]):
+                    print('DAY',i,'NOT MATCHING AT',j)
+                    return
+
+        for nurse in d:
+            got = False
+            day = 1
+            while(day <= self.D):
+                if(d[nurse][day]  == 'R'):
+                    got = True
+                if(day%7==0):
+                    if(not got):
+                        print('NURSE',nurse,'NO REST',day)
+                        return 
+                    got = False
+                day +=1
+
+        print('SANITY MATCHED')
+
+d = {1: {1: 'R', 2: 'M', 3: 'A', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'A', 11: 'E', 12: 'E', 13: 'E', 14: 'E', 15: 'E', 16: 'R', 
+17: 'M', 18: 'E', 19: 'E', 20: 'E', 21: 'E'}, 2: {1: 'M', 2: 'A', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'R', 10: 'M', 11: 'E', 
+12: 'E', 13: 'E', 14: 'E', 15: 'E', 16: 'E', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 3: {1: 'R', 2: 'M', 3: 'A', 4: 'E', 5: 'E', 6: 'E', 7: 'E', 8: 'E', 9: 'R', 10: 'M', 11: 'E', 12: 'E', 13: 'E', 14: 'E', 15: 'E', 16: 'R', 17: 'M', 18: 'A', 19: 'A', 20: 'A', 21: 'A'}, 4: {1: 'M', 2: 'R', 3: 'M', 4: 'E', 5: 'E', 6: 'E', 7: 'E', 8: 'E', 9: 'E', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'A', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 5: {1: 'R', 2: 'M', 3: 'A', 4: 'E', 5: 'E', 6: 'E', 7: 'E', 8: 'E', 9: 'E', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'R', 17: 'M', 18: 'R', 19: 'M', 20: 'R', 21: 'M'}, 6: {1: 'R', 2: 'M', 3: 'A', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'A', 11: 'E', 12: 'E', 13: 'E', 14: 'E', 15: 'E', 16: 'E', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 7: {1: 'E', 2: 'E', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'R', 10: 'M', 11: 'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'E', 18: 'R', 19: 'M', 20: 'R', 21: 'M'}, 8: {1: 'A', 2: 'E', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'A', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'R', 17: 'M', 18: 'E', 19: 'E', 20: 'E', 21: 'E'}, 9: {1: 'E', 2: 'R', 3: 'M', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'A', 11: 'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'A', 18: 'E', 19: 'E', 20: 'E', 21: 'E'}, 10: {1: 'M', 2: 'R', 3: 'M', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'A', 11: 'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'A', 18: 'E', 19: 'E', 20: 'E', 21: 'E'}, 11: {1: 'A', 2: 'R', 3: 'M', 4: 'E', 5: 'E', 6: 'E', 7: 'E', 8: 'E', 9: 'R', 10: 'M', 11: 'R', 12: 'M', 13: 
+'R', 14: 'M', 15: 'R', 16: 'M', 17: 'A', 18: 'R', 19: 'M', 20: 'R', 21: 'M'}, 12: {1: 'M', 2: 'A', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'R', 10: 'M', 11: 'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'E', 18: 'R', 19: 'M', 20: 'R', 21: 'M'}, 13: {1: 'E', 2: 
+'E', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'A', 10: 'R', 
+11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'R', 17: 'M', 18: 'R', 19: 'M', 20: 'R', 21: 'M'}, 14: {1: 'R', 2: 'M', 3: 'E', 4: 'R', 5: 
+'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'A', 11: 'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'E', 18: 'R', 19: 'M', 20: 'R', 21: 
+'M'}, 15: {1: 'E', 2: 'R', 3: 'M', 4: 'E', 5: 'E', 6: 'E', 7: 'E', 8: 
+'E', 9: 'R', 10: 'M', 11: 'A', 12: 'A', 13: 'A', 14: 'A', 15: 'A', 16: 'E', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 16: {1: 'M', 2: 'R', 3: 'M', 4: 'A', 5: 'A', 6: 'A', 7: 'A', 8: 'A', 9: 'R', 10: 'M', 11: 'E', 12: 'E', 13: 'E', 14: 'E', 15: 'E', 16: 'R', 17: 'M', 18: 'R', 
+19: 'M', 20: 'R', 21: 'M'}, 17: {1: 'A', 2: 'E', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'R', 10: 'M', 11: 'A', 12: 'A', 13: 'A', 14: 'A', 15: 'A', 16: 'R', 17: 'M', 18: 'E', 19: 'E', 20: 'E', 21: 'E'}, 18: {1: 'M', 2: 'A', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'R', 10: 'M', 11: 'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'A', 18: 'R', 19: 'M', 20: 'R', 21: 'M'}, 19: {1: 'R', 2: 'M', 3: 'A', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'E', 11: 
+'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'A', 18: 'R', 19: 'M', 20: 'R', 21: 'M'}, 20: {1: 'M', 2: 'A', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'A', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'R', 17: 'M', 18: 'R', 19: 'M', 20: 'R', 21: 'M'}, 21: {1: 'M', 2: 'R', 3: 'M', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'E', 11: 'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'E', 18: 'A', 19: 'A', 20: 'A', 21: 'A'}, 22: {1: 'M', 2: 'R', 3: 'M', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'E', 11: 'R', 12: 'M', 13: 'R', 14: 'M', 15: 'R', 16: 'M', 17: 'E', 18: 'A', 19: 
+'A', 20: 'A', 21: 'A'}, 23: {1: 'R', 2: 'M', 3: 'E', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'E', 11: 'A', 12: 'A', 13: 'A', 14: 'A', 15: 'A', 16: 'E', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 
+24: {1: 'A', 2: 'E', 3: 'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'A', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'A', 
+17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 25: {1: 'M', 2: 'A', 3: 
+'R', 4: 'M', 5: 'R', 6: 'M', 7: 'R', 8: 'M', 9: 'A', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'A', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 26: {1: 'R', 2: 'M', 3: 'E', 4: 'A', 5: 'A', 6: 
+'A', 7: 'A', 8: 'A', 9: 'E', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'A', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 27: {1: 'E', 2: 'R', 3: 'M', 4: 'A', 5: 'A', 6: 'A', 7: 'A', 8: 'A', 9: 
+'E', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'A', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 28: {1: 'R', 2: 'M', 3: 'E', 4: 'R', 5: 'M', 6: 'R', 7: 'M', 8: 'R', 9: 'M', 10: 'E', 11: 'A', 12: 'A', 13: 'A', 14: 'A', 15: 'A', 16: 'R', 17: 'M', 18: 'A', 19: 'A', 20: 'A', 21: 'A'}, 29: {1: 'R', 2: 'M', 3: 'E', 4: 'A', 5: 'A', 6: 'A', 7: 'A', 8: 'A', 9: 'R', 10: 'M', 11: 'A', 12: 'A', 13: 'A', 14: 'A', 15: 'A', 16: 'E', 17: 'R', 18: 'M', 19: 'R', 20: 'M', 21: 'R'}, 30: 
+{1: 'A', 2: 'R', 3: 'M', 4: 'A', 5: 'A', 6: 'A', 7: 'A', 8: 'A', 9: 'E', 10: 'R', 11: 'M', 12: 'R', 13: 'M', 14: 'R', 15: 'M', 16: 'R', 17: 
+'M', 18: 'A', 19: 'A', 20: 'A', 21: 'A'}} 
+# d={1: {1: 'A', 2: 'M', 3: 'R'}, 2: {1: 'R', 2: 'M', 3: 'A'}, 3: {1: 'E', 2: 'R', 3: 'M'}, 4: {1: 'M', 2: 'E', 3: 'E'}, 5: {1: 'M', 2: 'A', 3: 'M'}}
+c = [[]]  
+ls = LocalSearch(d,4,c,2) 
+ls.solve(d,4)
 
