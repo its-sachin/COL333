@@ -71,7 +71,7 @@ def test():
 def grade():
 
     # t = int(input('Times: '))
-    t = 5
+    t = 3
     maps = [
         'capsuleClassic','contestClassic','mediumClassic','minimaxClassic','openClassic',
     'originalClassic','powerClassic','smallClassic','testClassic','trappedClassic']
@@ -80,7 +80,7 @@ def grade():
         print('\nRunning on : ' + m + '\n' )
 
         startTime = time.time()
-        subprocess.run('python pacman.py -l ' + m + ' -p ExpectimaxAgent -a evalFn=better -q -n ' + str(t))
+        subprocess.run('python pacman.py -l ' + m + ' -p ExpectimaxAgent -a evalFn=better -n ' + str(t))
         endTime = time.time()
 
         print('\nTime Taken : ' + str(endTime-startTime) + '\n' )

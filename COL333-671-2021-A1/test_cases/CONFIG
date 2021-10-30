@@ -1,1 +1,1 @@
-order: "test_reflex test_minimax test_alpha_beta_pruning test_expectimax test_evaluation_fn"
+order: "test_reflex test_minimax test_alpha_beta_pruning test_expectimax test_evaluation_fn eval_fn_20 eval_fn_test_1 eval_fn_test_2 eval_fn_test_3 eval_fn_test_5"
