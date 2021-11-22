@@ -62,6 +62,14 @@ def sanity(d,N,D,m,a,e):
 
     print('SANITY MATCHED')
 
+def getWeight(e,s,d):
+    w=0
+    for nurse in range(1,s+1):
+        for day in range(1,d+1):
+            if(e[nurse][day] == 'M' or e[nurse][day] == 'E'):
+                w+=1
+    return w
+
 
 for line,sol in enumerate(data):
     assert type(sol)==type({})
@@ -76,4 +84,5 @@ for line,sol in enumerate(data):
         j+=1
         d[i][j] = sol[item]
     sanity(d,N,D,m,a,e)
+    print(getWeight(d,))
     

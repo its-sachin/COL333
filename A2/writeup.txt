@@ -1,0 +1,81 @@
+Sachin 2019CS10722
+COL333 A2 WriteUp
+
+Part A:
+
+In this part to automate the roster preparation task I've used Constraint satisfaction techniques 
+taught in class. I've created a class called CSP that handles solving of problem by backtracking search.
+Since backtracking search is a standard algorithm and all its efficiency lies in choosing order of 
+values and variables, so let's discuss about them.
+
+Order of Variables:
+    -I've tried to take most constrained variable first (having less values in domain)
+    -Initially as all the variables have same domain, and all are equally constrained, so I start with 1st
+    position only
+    -Then after adding some value on a variable, domain of following variables might change
+        1. Variable of unassigned nurses on that day
+        2. Variable of next and prev day of same nurse
+        3. Variable of week days of same nurse
+    -So, I've tried to assign values to all the nurses on that day and then move to other day (as domain on same day
+    are certain to change)
+    -Also, M can only occur after R/A so first I give prferences to variables such that their previous day had R/A.
+        In that also, I've given priority to A over R, as week in which nurse has got rest is less constrained.
+    -After that I've tried to get those nurses who has not got week rest till now, as they are more constrained. 
+
+Order of Values:
+    -I've tried to take less constrained values first
+    -For that I've assigned some scores to the values and the value with least score will be checked first
+    -Scores are as followes:-
+        1. Rest Score: If nurse has not got rest in this week yet, R will have higher priority
+        2. AR Score: If previous day value of current nurse is A/R then M will have higher priority
+        3. Remaining Score: If some value's ratio of got/required in current day is less, it has higher priority
+    -Then I tried different weighted combinations of all scores and kept the best one.
+
+Other Efficiency Techniques:
+
+    1. Mapping of first week:-
+        As values assigned to nurses at any day is one of the permutations of possible combination of A,M,E,R with their 
+        respective count. So, if we have correctly satisfied the constraints for 1 week and have got the permutation of 8th day 
+        that satisfies the constraints then we can find the transition vector V that maps 1st day to 8th day and similalry map 2nd 
+        day with that vector to get 9th day, 3rd day to get 10th day....and similalry (i-7)th day to get ith day.
+
+        Claim: All the constraints will be satisfied of the assignment got from above method
+
+        -As mapping is equivalent of the process of shuffeling the schedule of the nurses(nurse i will get schedule of nurse V(i)) and if
+        constraint are met for first 7 days and also between 7th and 8th day then they will remain intact as there is no comstraint between
+        variables of same day other that M,A,E,R count (that will remain unchanged as mapping maps in same permutation group)
+
+        So, I've solved the problem for 8 days and mapped the solution to D days (if D>8)
+
+    2. Inferences:-
+        I've tried adding Inferences but that didn't helped much in solution, but increases overhead because of extra computation
+
+    3. Not Possible Cases:
+        For some cases for which answer is surely not possible, I did not do computation, simply return.
+
+    
+Part B:
+
+In this part I've used Simulated Annealing technique to maximize the M+E count of first S nurses such that constraints remain satisfied.
+So, after getting the solution from part a first I sort the nurses with their m+e count and assign first s nurses the highest values of m+e
+After that I used 2 method to go to neighbour state:
+
+    1. Deterministic:
+        For this I flipped E/M of bottom nurses with A/R of top S nurses such that constraints are satisfied
+        I gave priority to bottom E over M as M will not allow to change further A/R of next day of it (if its there) to E.
+        Also I gave priority to A/R having E at thier next day as this will give chance of other A/R to remain available for further flips
+
+    2. Randomized:
+        For some iterations I also flipped random values (of course with constraints satisfied), the count of such filps will decreases with time
+
+So, now if some neighbour state if having more weight that maximum weight that I've got so far then I update the weight and assignment and dump the ans
+ 
+
+ 
+
+
+
+
+
+
+

@@ -6,11 +6,20 @@ from math import log
 
 class CSP:
 
+    def dumpAns(self):
+        d = {}
+        with open("solution.json" , 'w') as file:
+            for i in self.assignment:
+                for j in self.assignment[i]:
+                    d ['N'+str(i-1)+'_'+str(j-1)]=self.assignment[i][j]
+            json.dump(d,file)
+            file.write("\n")
+
+
     def __init__(self,line):
 
         self.N = int(line[0])
         self.D = int(line[1])
-        self.d = int(line[1])
         self.d = min(self.D,8)
         self.bound = {'M':int(line[2]),'A': int(line[3]),'E': int(line[4]), 'R': self.N - int(line[2]) -int(line[3])-int(line[4])}
 
@@ -24,25 +33,16 @@ class CSP:
 
         self.nextNurse =  1
         self.nextDay = 1
-        self.next = 1
         self.assigned = 0
 
         self.assignment = {}
+        self.dumpAns()
 
         self.count = {'R':{},'days':{}}
         for i in range(1,self.d+1):
             self.count['days'][i] = {'A':0,'E':0,'M':0,'R':0,'nurse':0}
         for i in range(1,self.N+1):
             self.count['R'][i] = 0
-
-    def dumpAns(self):
-        d = {}
-        with open("solution.json" , 'w') as file:
-            for i in self.assignment:
-                for j in self.assignment[i]:
-                    d ['N'+str(i-1)+'_'+str(j-1)]=self.assignment[i][j]
-            json.dump(d,file)
-            file.write("\n")
 
     
     def checkBounds(self,value,day,notAdded=True):
@@ -126,41 +126,37 @@ class CSP:
                 remScore = self.count['days'][pos[1]][i]/self.bound[i]
                 
                 score = restScore + 5*arScore + remScore + mrBonus
-                # print(pos,i,restScore,arScore,remScore)
                 prob.append([score,i])
 
         out=[]
         prob.sort()
         for i in prob:
             out.append(i[1])
-        # print(pos,out)
         return out
 
     def setNext(self):
 
         if(self.nextDay==1):
-            if(self.nextDay%2==0):
-                self.next = -1
-            else:
-                self.next = 1
 
-            if((self.next == 1 and self.nextNurse == self.N) or (self.next == -1 and self.nextNurse == 1)):
+            if(self.nextNurse == self.N):
                 self.nextDay += 1
                 self.setNext()
             else:
-                self.nextNurse += self.next
+                self.nextNurse += 1
 
         elif(not self.isComplete()):
             if(self.count['days'][self.nextDay]['M'] != self.bound['M']):
+
                 for i in range(1,self.N+1):
-                    if(self.assignment[i][self.nextDay-1]=='R'):
+                    if(self.assignment[i][self.nextDay-1]=='A'):
                         try:
                             self.assignment[i][self.nextDay]+'A'
                         except:
                             self.nextNurse = i
                             return
+
                 for i in range(1,self.N+1):
-                    if(self.assignment[i][self.nextDay-1]=='A'):
+                    if(self.assignment[i][self.nextDay-1]=='R'):
                         try:
                             self.assignment[i][self.nextDay]+'A'
                         except:
@@ -245,12 +241,13 @@ class CSP:
     def localSearch(self):
 
         def addR(nurse1,nurse2,day):
-            if(E[nurse1][day]=='R' and (day-1)/7<len(self.countR[0]) ):
-                self.countR[nurse1][(day-1)/7]-=1
-                self.countR[nurse2][(day-1)/7]+=1
-            elif(E[nurse2][day]=='R' and (day-1)/7<len(self.countR[0]) ):
-                self.countR[nurse2][(day-1)/7]-=1
-                self.countR[nurse1][(day-1)/7]+=1
+
+            if(E[nurse1][day]=='R' and (day-1)/7<len(self.countR[1]) ):
+                self.countR[nurse1][(day-1)//7]-=1
+                self.countR[nurse2][(day-1)//7]+=1
+            elif(E[nurse2][day]=='R' and (day-1)/7<len(self.countR[1]) ):
+                self.countR[nurse2][(day-1)//7]-=1
+                self.countR[nurse1][(day-1)//7]+=1
         
         def isPossible(nurse1,nurse2,day):
     
@@ -258,8 +255,8 @@ class CSP:
                 if(nurse1>nurse2):
                     nurse1,nurse2=nurse2,nurse1
 
-                if((E[nurse1][day]=='R' and (day-1)/7<len(self.countR[0]) and self.countR[nurse1][(day-1)/7]==1) or
-                    (E[nurse2][day]=='R' and (day-1)/7<len(self.countR[0]) and self.countR[nurse2][(day-1)/7]==1)):
+                if((E[nurse1][day]=='R' and (day-1)/7<len(self.countR[1]) and self.countR[nurse1][(day-1)//7]==1) or
+                    (E[nurse2][day]=='R' and (day-1)/7<len(self.countR[1]) and self.countR[nurse2][(day-1)//7]==1)):
                     return False
 
                 def check(p1,p2):
@@ -296,7 +293,7 @@ class CSP:
                 for nurse in range(1,self.N+1):
                     val = E[nurse][day]
                     if(nurse<=self.S):
-                        if(val== 'A' or (val == 'R' and ((day-1)/7>=len(self.countR[0]) or self.countR[nurse][(day-1)//7] >1) )):
+                        if(val== 'A' or (val == 'R' and ((day-1)/7>=len(self.countR[1]) or self.countR[nurse][(day-1)//7] >1) )):
                             if(day==self.D or E[nurse][day+1]=='E'):
                                 currTop.append([0,nurse])
                             else:
@@ -313,13 +310,6 @@ class CSP:
                     maxNeighbours[day] = [currTop,currBottom]
                 day+=1
 
-            # def isPossible(up,bp,day):
-            #     if(day<self.D and E[up][day+1]=='M'):
-            #         return False
-            #     if(E[bp][day] == 'M' and day>1 and (E[up][day-1] == 'E' or E[up][day-1] == 'M')):
-            #         return False
-            #     return True
-
             if(len(maxNeighbours)>0):
                 
                 pos=[]
@@ -330,10 +320,8 @@ class CSP:
                             if(isPossible(t[1],b[1],day) and (pos==[] or t[0]+b[0] < pos[2])):
                                 pos = [ [t[1],day], [b[1],day], t[0] + b[0] ]   
                 if(len(pos)>0):
-                    print('DETERMINISTIC EXCHANGE',pos)
                     addR(pos[0][0],pos[1][0],pos[0][1])
                     E[pos[0][0]][pos[0][1]],E[pos[1][0]][pos[1][1]] = E[pos[1][0]][pos[1][1]],E[pos[0][0]][pos[0][1]]
-                    self.sanity(E)
                     return True
             return False
 
@@ -342,7 +330,6 @@ class CSP:
             done = {}
             for i in range(int(thres)):
                 day = randint(1,self.D)
-                print('NEW Day',day)
                 if(done.get(day)==None):
                     done[day] = []
                 got =False
@@ -351,13 +338,12 @@ class CSP:
                     nurse2 = self.N
                     while(nurse2 > 0 and not got):
                         if(nurse1!=nurse2 and (done.get(day) == None or [min(nurse1,nurse2),max(nurse1,nurse2)] not in done[day]) and isPossible(nurse1,nurse2,day)):
-                            print('RANDOMIZED EXCHANGE',nurse1,nurse2,day)
+                            addR(nurse1,nurse2,day)
                             E[nurse1][day],E[nurse2][day] = E[nurse2][day],E[nurse1][day]
                             done[day].append([min(nurse1,nurse2),max(nurse1,nurse2)])
                             got =True
                         nurse2-=1
                     nurse1+=1
-                self.sanity(E)
 
         def deepCopy(e):
             copy={}
@@ -369,11 +355,11 @@ class CSP:
             
         done = False
         E,X,it = deepCopy(self.assignment),self.maxWeight,1
+        
         while ((not done) and time.time()-self.startTime < self.T):
             if(not deterministic()):
                 
                 thres = min(-1*(log(random())*self.T/10*it),self.D+self.N)
-                print('threshold = ', thres)
                 if(thres >= 1):
                     randomize(thres)
                     it+=1
@@ -384,47 +370,36 @@ class CSP:
             else:
                 X+=1
                 
-            print('weight = ',X,'\n')
             if(X > self.maxWeight):
                 self.maxWeight,self.assignment = X,deepCopy(E)
                 self.dumpAns()
 
-            if(self.maxWeight!=self.getWeight(self.assignment)):
-                self.sanity()
-                print(self.maxWeight,self.getWeight(self.assignment))
-                print('GAND MAR GAYI')
-                exit()
-
-
-
-        
-
-            
-
     def maximize(self):
 
-        self.countR = {j: [0 for i in range((self.D-1)//7)] for j in range(self.N)}
+        if(self.bound['M'] == self.bound['E'] == 0):
+            return
+
         weights = []
         for i in range(1,self.N+1):
             c = 0
             for j in range(1,self.D+1):
                 if(self.assignment[i][j] == 'M' or self.assignment[i][j] == 'E'):
                     c+=2
-                elif(self.assignment[i][j] == 'R' and (j-1)/7 < len(self.countR[0])):
-                    self.countR[i-1][(j-1)//7] +=1
             weights.append([c,i])
             
         weights.sort(reverse=True)
+        self.countR = {j: [0]*(self.D//7) for j in range(1,1+self.N)}
 
         maxDict = {}
         for i in range(self.N):
             maxDict[i+1] = self.assignment[weights[i][1]]
             for j in range(1,self.D+1):
                 maxDict[i+1][j] = self.assignment[weights[i][1]][j]
+                if(maxDict[i+1][j] == 'R' and (j-1)/7 < len(self.countR[1])):
+                    self.countR[i+1][((j-1)//7)] +=1
+
         self.assignment,self.maxWeight = maxDict,self.getWeight(maxDict)
 
-        print('\n\nMAX FINDING STARTS')
-        self.sanity()
         self.dumpAns()
         self.localSearch()
 
@@ -438,20 +413,7 @@ class CSP:
                 self.maximize()
             return self.assignment
 
-        # print('Assigment\n')
-        # for i in self.assignment:
-        #     print(i ,'- [', self.assignment[i], ']')
-        # print('\n')
-        try:
-            self.st
-        except:
-            self.st = time.time()
-        # if(time.time()-self.st > 200):
-        #     return -1
-        print(round(100*self.assigned/(self.N*self.d),2),'\t',round(time.time()-self.st,2),end='\r')
-
         for value in self.getValues():
-            # print('checkig',value)
             if(self.isConsistent(value)):
 
                 prev = (self.nextNurse,self.nextDay)
@@ -469,12 +431,13 @@ class CSP:
 
     def solve(self):
         if(self.__isSolvable()):
-            # print('SOLVING')
             return self.backtrackingSearch()
 
     def sanity(self,d={}):
         if(d=={}):
             d=self.assignment
+        if(d=={}):
+            return
         count = {'M':[0]*self.D,'A':[0]*self.D,'E':[0]*self.D,'R':[0]*self.D}
         for nurse in d:
             print(nurse,d[nurse])
@@ -519,28 +482,10 @@ except:
     exit()
 
 line = inputFile.readline()
-line = inputFile.readline()
-
-def pr(csp):
-    d = csp.solve()
-    if(d==None):
-        print('NOT POSSIBLE')
-        return
-    else:
-        print('POSSIBLE')
-        # csp.sanity()
-
-st = time.time()
-i=0
-while(line):
+for line in inputFile.readlines():
     line = line.strip().split(',')
 
     if(len(line) > 0):
         csp = CSP(line)
-        # print('ans',csp.solve())
-        pr(csp)
-    line = inputFile.readline()
-    i+=1
-    # print(i)
-
-# print(time.time()-st)
+        s=csp.solve()
+        # csp.sanity()
