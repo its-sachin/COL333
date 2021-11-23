@@ -1,114 +1,185 @@
+import random
+
 class Map:
     def __init__(self, height, width, walls, depots):
         self.height = height
         self.width = width
         self.walls = walls
         self.depots = depots
-        # self.picked = False
 
+    # Checks if there is any wall between cell point1 and cell point2 
     def isWall(self, point1, point2):
-        return not (self.walls[point1].get(point2) == None)
+        try:
+            a = self.walls[point1][point2]
+        except:
+            try:
+                a = self.walls[point2][point1]
+            except:
+                return False
+        return True
 
-    # These functions required only id we need to print map at each step (game type)
+    # integer to depot
+    def itod(self,i):
+        a = ['R','G','B','Y','T']
+        return a[i]
 
-    # def setPassenger(self,pos):
-    #     self.passengerPos = pos
+    # depot to integer (Useful for array indexing)
+    def dtoi(self,d):
+        a = ['R','G','B','Y','T']
+        return a.index(d)
 
-    # def setTaxi(self,pos):
-    #     self.taxiPos = pos
-
-    # def move(self,direction):
-    #     if(direction == 'N'):
-    #         self.taxiPos[1] += 1
-    #     elif(direction == 'S'):
-    #         self.taxiPos[1] -= 1
-    #     elif(direction == 'E'):
-    #         self.taxiPos[0] += 1
-    #     elif(direction == 'W'):
-    #         self.taxiPos[0] -= 1
-
-    #     if(self.picked):
-    #         self.passengerPos = self.taxiPos
-
-    # def pick(self):
-    #     self.picked = True
-
-    # def drop(self):
-    #     self.picked = False
+    # Sets random destination out of 4 depots
+    def setDest(self):
+        i = random.randint(1,4)
+        self.dest = self.itod(i-1)
+        
 
 class State:
-    def __init__(self,taxiPos,passengerPos,picked):
-        self.taxiPos = taxiPos
-        self.passengerPos = passengerPos
-        self.picked = picked
 
-class MDP:
-    def __init__(self,map:Map):
-        self.map = map
+    def __init__(self,x,y,p):
+        self.taxiPos = (x,y)
+        self.passenger = p
 
-    # Checks if state transition of s -> s1 is valid or not
-    # TODO: Will have to think of more constraints if there is any
-    def isValidTransition(self,s:State,s1:State):
+    # Checks if self -> s1 transition possible or not
+    def isValidTransition(self,s1):
+        
+        pos = s1.taxiPos
+        if(State.map.isWall(self.taxiPos,s1.taxiPos) or pos[0] >= State.map.height or pos[0] < 0 or pos[1] >= State.map.width or pos[1] < 0):
+            return False
 
-        def boundCheck(pos):
-            if(pos[0] >= self.map.height or pos[0] < 0 or pos[1] >= self.map.width or pos[1] < 0):
-                return False
-            return True
-
-        def isValidState(self,s:State):
-            if(s.picked and s.passengerPos != s.taxiPos):
-                return False
-
-            return boundCheck(s.taxiPos) and boundCheck(s.passengerPos)
-
-        if(isValidState(s1)):
-            if(((not s1.picked) and s.passengerPos != s1.passengerPos) or
-                self.map.isWall(s.taxiPos,s1.taxiPos)):
-                return False
-            return True
         return False
 
-    # Returns transition probability of s -> s1 if action a is done on s
-    # domain of a = ['N','S','E','W','PICK','DROP']
+    # Gives all possible tranitions from current state (self)
+    def getNeighbours(self):
+        neigh = []
+        for direc in range(2):
+            for step in range(-1,2,2):
+                pos = [self.taxiPos[0],self.taxiPos[1]]
+                pos[direc] += step
+                s1 = State(pos[0],pos[1],self.passenger)
+                if(self.isValidTransition(s1)):
+                    neigh.append(s1)
+
+        depo = None
+        for i in ['R','G','B','Y']:
+            if(State.map.depots[i] == self.taxiPos):
+                depo = i
+                break
+        
+        # Assumed PICK and DROP only possible on depots
+        if(depo):
+            neigh.append(State(self.taxiPos[0],self.taxiPos[1],depo))
+            neigh.append(State(self.taxiPos[0],self.taxiPos[1],'T'))
+        
+        return neigh
+
+        
+
+class MDP:
+    def __init__(self,m:Map):
+        self.map = m
+        State.map = m
+
+    # Trnsition function 
     def T(self,s:State ,a ,s1:State):
 
-        if(not self.isValidTransition(s,s1)):
-            return 0
-
         if(a == 'PICK'):
-            if((not s.picked) and s1.picked and s.taxiPos == s.passengerPos):
+            if(s.passenger != 'T' and s1.passenger == 'T'):
                 return 1
-            return 0
-        elif(a == 'DROP'):
-            if(s.picked and (not s1.picked) and s1.taxiPos == s1.passengerPos):
-                return 1
-            return 0
 
-        elif(s.picked == s1.picked):
+        elif(a == 'DROP'):
+            if(s.passenger == 'T' and s1.passenger != 'T'):
+                return 1
+
+        else:
 
             direc = { 
-                'N' : [1,1],
-                'S' : [1,-1],
-                'E' : [0,1],
-                'W' : [0,-1],
+                'N' : [0,1],
+                'S' : [0,-1],
+                'E' : [1,0],
+                'W' : [-1,0],
             }
 
-            if(s.taxiPos[direc[a][0]] + direc[a][1] == s1.taxiPos):
-                return 0.85
-            else:
-                return 0.05
+            for i in direc:
+                direc[i] = (s.taxiPos[0]+direc[i][0],s.taxiPos[1]+direc[i][1])
+
+            for i in direc:
+                if(s1.taxiPos == direc[i]):
+                    if(a==i):
+                        return 0.85
+                    else:
+                        return 0.05
 
         return 0
 
+    # Reward function
     def R(self,s,a,s1):
-        if(not self.isValidTransition(s,s1)):
-            return 0
+        reward = -1
 
-        reward = -1 
+        if(a == 'DROP'):
+            if(s1.passenger == self.map.dest):
+                reward += 20
+            else:
+                reward -= 10
+
+        if(a == 'PICK' and s.passenger != self.map.dest):
+            reward -= 10
+
         return reward
 
-    def valueIteration(self):
-        pass
+    # Performs value iteration
+    # TODO: have to add max-norm using epsilon
+    def valueIteration(self, e):
+
+        V = [[[0 for k in range(len(self.map.depots) +1)] for i in range(self.map.width)] for j in range(self.map.height)]
+        y = 0.9
+
+        changed = True
+        i = 0
+
+        while changed:
+
+            changed = False
+
+            for y in range(self.map.height):
+                for x in range(self.map.width):
+                    for p in range(len(self.map.depots) +1):
+                            
+                        s = State(x,y,self.map.itod(p))
+                        maxx = None
+                        for a in ['N','S','W','E','PICK','DROP']:
+                            curr = 0
+
+                            for s1 in s.getNeighbours():
+                                t = self.T(s,a,s1)
+
+                                if(t>0):
+                                    curr += t*(self.R(s,a,s1) + y*V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)])
+                            
+                            # print(curr)
+                            
+                            if(maxx == None or maxx[0] < curr):
+                                maxx = [curr,a]
+                        
+                        if(maxx != None and maxx[0] != V[y][x][p]):
+                            changed = True
+                             # TODO: Right now only value is stored, but have to store final policies somewhere
+                            V[y][x][p] = maxx[0]
+
+                        # print(y,x,p,maxx)
+
+            i+=1
+            print('Iteration',i,end='\r')
+
+        for y in range(self.map.height):
+            for x in range(self.map.width):
+                print(V[y][x],end = ', ')
+            print()  
+
+                
+                            
+
+
 
     def policyIteration(self):
         pass
@@ -120,21 +191,27 @@ class RL:
 
 
 walls = {
-    {(0,0):(0,1)}, 
-    {{1,0}:(1,1)},
-    {(3,1):(3,2)},
-    {(4,1):(4,2)},
-    {(0,2):(0,3)},
-    {(1,2):(1,3)}
-    }
+    (0,0):(0,1), 
+    (1,0):(1,1),
+    (3,1):(3,2),
+    (4,1):(4,2),
+    (0,2):(0,3),
+    (1,2):(1,3)
+}
 
-depots = [
-    (0,0),
-    (4,0),
-    (0,3),
-    (4,4)
-]
+depots = {
+    'R' : (0,0),
+    'G' : (4,0),
+    'B' : (0,3),
+    'Y' : (4,4)
+}
 
+
+# Flow of program: Map created -> destination set -> MDP called -> Value iteration solves MDP -> calls T() and R() in between and makes State class instances 
 M1 = Map(5,5,walls,depots)
+M1.setDest()
+
+mdp = MDP(M1)
+mdp.valueIteration(0.1)
         
 
