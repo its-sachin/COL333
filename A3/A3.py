@@ -32,6 +32,12 @@ class Map:
     def setDest(self):
         i = random.randint(1,4)
         self.dest = self.itod(i-1)
+
+        while True:
+            j = random.randint(1,4)
+            if(j != i):
+                self.start = self.itod(i-1)
+                break
         
 
 class State:
@@ -50,26 +56,34 @@ class State:
         return True
 
     # Gives all possible tranitions from current state (self)
-    def getNeighbours(self):
+    def getNeighbours(self,a):
         neigh = []
-        for direc in range(2):
-            for step in range(-1,2,2):
-                pos = [self.taxiPos[0],self.taxiPos[1]]
-                pos[direc] += step
-                s1 = State(pos[0],pos[1],self.passenger)
-                if(self.isValidTransition(s1)):
-                    neigh.append(s1)
 
-        depo = None
-        for i in ['R','G','B','Y']:
-            if(State.map.depots[i] == self.taxiPos):
-                depo = i
-                break
-        
-        # Assumed PICK and DROP only possible on depots
-        if(depo):
-            neigh.append(State(self.taxiPos[0],self.taxiPos[1],depo))
-            neigh.append(State(self.taxiPos[0],self.taxiPos[1],'T'))
+        if(a == 'PICK' or a == 'DROP'):
+
+            depo = None
+            for i in ['R','G','B','Y']:
+                if(State.map.depots[i] == self.taxiPos):
+                    depo = i
+                    break
+            
+            # Assumed PICK and DROP only possible on depots
+            if(depo):
+                if(a == 'DROP' and self.passenger == 'T'):
+                    neigh.append(State(self.taxiPos[0],self.taxiPos[1],depo))
+                if(a == 'PICK' and self.passenger != 'T'):
+                    neigh.append(State(self.taxiPos[0],self.taxiPos[1],'T'))
+
+        else:
+
+            for direc in range(2):
+                for step in range(-1,2,2):
+                    pos = [self.taxiPos[0],self.taxiPos[1]]
+                    pos[direc] += step
+
+                    s1 = State(pos[0],pos[1],self.passenger)
+                    if(self.isValidTransition(s1)):
+                        neigh.append(s1)
         
         return neigh
 
@@ -84,12 +98,10 @@ class MDP:
     def T(self,s:State ,a ,s1:State):
 
         if(a == 'PICK'):
-            if(s.passenger != 'T' and s1.passenger == 'T'):
-                return 1
+            return 1
 
         elif(a == 'DROP'):
-            if(s.passenger == 'T' and s1.passenger != 'T'):
-                return 1
+            return 1
 
         else:
 
@@ -122,8 +134,8 @@ class MDP:
                 reward += 20
             else:
                 reward -= 10
-
-        if(a == 'PICK' and s.passenger != self.map.dest):
+        
+        if(a == 'PICK' and (s.passenger != self.map.start or s1.taxiPos != self.map.depots[self.map.start])):
             reward -= 10
 
         return reward
@@ -133,7 +145,7 @@ class MDP:
     def valueIteration(self, e):
 
         V = [[[0 for k in range(len(self.map.depots) +1)] for i in range(self.map.width)] for j in range(self.map.height)]
-        y = 0.9
+        gamma = 0.9
 
         changed = True
         i = 0
@@ -149,21 +161,23 @@ class MDP:
                         s = State(x,y,self.map.itod(p))
                         maxx = None
                         for a in ['N','S','W','E','PICK','DROP']:
-                            curr = 0
- 
-                            for s1 in s.getNeighbours():
-                                t = self.T(s,a,s1)
-                                # print(s.taxiPos,s.passenger, '=>', s1.taxiPos,s1.passenger, a, t)
 
-                                if(t>0):
-                                    curr += t*(self.R(s,a,s1) + y*V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)])
-                            
-                            # print(curr)
-                            
-                            if(maxx == None or maxx[0] < curr):
-                                maxx = [curr,a]
+                            neigh = s.getNeighbours(a)
+                            if(len(neigh) > 0):
+                                curr = 0
+                                for s1 in neigh:
+                                    t = self.T(s,a,s1)
+                                    # print(s.taxiPos,s.passenger, '=>', s1.taxiPos,s1.passenger, a, t, t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)]),V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)])
+
+                                    if(t>0):
+                                        curr += t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)])
+                                # print('----CURR: ' ,curr)
+
+                                if(maxx == None or maxx[0] < curr):
+                                    maxx = [curr,a]
                         
-                        if(maxx != None and maxx[0] != V[y][x][p]):
+                        # print(s.taxiPos,s.passenger, maxx,'\n')
+                        if(maxx != None and abs(maxx[0] - V[y][x][p]) > e):
                             changed = True
                              # TODO: Right now only value is stored, but have to store final policies somewhere
                             V[y][x][p] = maxx[0]
@@ -176,6 +190,12 @@ class MDP:
             #     for x in range(self.map.width):
             #         print(V[y][x],end = ', ')
             #     print()  
+
+        for y in range(self.map.height):
+            for x in range(self.map.width):
+                # print(['{0:.2f}'.format(i) for i in V[y][x]],end = ', ')
+                print(V[y][x],end = ', ')
+            print()  
 
                 
                             
@@ -212,7 +232,8 @@ depots = {
 M1 = Map(5,5,walls,depots)
 # M1.setDest()
 M1.dest = 'R'
-print('DEST : ',M1.dest)
+M1.start = 'G'
+print('DEST : ',M1.dest, 'START: ',M1.start)
 
 mdp = MDP(M1)
 mdp.valueIteration(0.1)
