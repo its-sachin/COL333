@@ -47,7 +47,7 @@ class State:
         if(State.map.isWall(self.taxiPos,s1.taxiPos) or pos[0] >= State.map.height or pos[0] < 0 or pos[1] >= State.map.width or pos[1] < 0):
             return False
 
-        return False
+        return True
 
     # Gives all possible tranitions from current state (self)
     def getNeighbours(self):
@@ -118,6 +118,7 @@ class MDP:
 
         if(a == 'DROP'):
             if(s1.passenger == self.map.dest):
+                # print(s.passenger,a,s1.passenger)
                 reward += 20
             else:
                 reward -= 10
@@ -149,9 +150,10 @@ class MDP:
                         maxx = None
                         for a in ['N','S','W','E','PICK','DROP']:
                             curr = 0
-
+ 
                             for s1 in s.getNeighbours():
                                 t = self.T(s,a,s1)
+                                # print(s.taxiPos,s.passenger, '=>', s1.taxiPos,s1.passenger, a, t)
 
                                 if(t>0):
                                     curr += t*(self.R(s,a,s1) + y*V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)])
@@ -170,11 +172,10 @@ class MDP:
 
             i+=1
             print('Iteration',i,end='\r')
-
-        for y in range(self.map.height):
-            for x in range(self.map.width):
-                print(V[y][x],end = ', ')
-            print()  
+            # for y in range(self.map.height):
+            #     for x in range(self.map.width):
+            #         print(V[y][x],end = ', ')
+            #     print()  
 
                 
                             
@@ -209,7 +210,9 @@ depots = {
 
 # Flow of program: Map created -> destination set -> MDP called -> Value iteration solves MDP -> calls T() and R() in between and makes State class instances 
 M1 = Map(5,5,walls,depots)
-M1.setDest()
+# M1.setDest()
+M1.dest = 'R'
+print('DEST : ',M1.dest)
 
 mdp = MDP(M1)
 mdp.valueIteration(0.1)
