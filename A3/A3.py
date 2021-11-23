@@ -58,7 +58,10 @@ class State:
                 if(State.map.depots[i] == self.taxiPos):
                     depo = i
                     break
-            neigh.append(State(self.taxiPos[0],self.taxiPos[1],depo,self.dest))
+            if(self.passenger == 'T'):
+                neigh.append(State(self.taxiPos[0],self.taxiPos[1],depo,self.dest))
+            else:
+                neigh.append(State(self.taxiPos[0],self.taxiPos[1],'X',self.dest))
 
         elif(a == 'PICK'):
             if(self.passenger != 'T' and self.passenger != 'X' and self.taxiPos == self.map.depots[self.passenger]):
@@ -140,7 +143,7 @@ class MDP:
     def valueIteration(self, e):
 
         V = [[[[0 for k in range(len(self.map.depots))] for l in range(len(self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
-        P = [[[[None for k in range(len(self.map.depots))] for l in range(len(self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
+        P = [[[['N' for k in range(len(self.map.depots))] for l in range(len(self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
 
         gamma = 0.9
 
@@ -165,9 +168,9 @@ class MDP:
                                     curr = 0
                                     for s1 in neigh:
                                         t = self.T(s,a,s1)
-                                        # print(s.taxiPos,s.passenger,s.dest, '=>', s1.taxiPos,s1.passenger,s1.dest, a, t, t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)])
-
+                                        
                                         if(t>0):
+                                            # print(s.taxiPos,s.passenger,s.dest, '=>', s1.taxiPos,s1.passenger,s1.dest, a, t, t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)])
                                             curr += t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)])
                                     # print('----CURR: ' ,curr)
 
