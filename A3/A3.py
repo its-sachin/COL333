@@ -48,15 +48,6 @@ class State:
         self.passenger = p
         self.dest = d
 
-    # Checks if self -> s1 transition possible or not
-    def isValidTransition(self,s1):
-        
-        pos = s1.taxiPos
-        if(State.map.isWall(self.taxiPos,s1.taxiPos) or pos[0] >= State.map.height or pos[0] < 0 or pos[1] >= State.map.width or pos[1] < 0):
-            return False
-
-        return True
-
     # Gives all possible tranitions from current state (self)
     def getNeighbours(self,a):
         neigh = []
@@ -80,10 +71,7 @@ class State:
                 for step in range(-1,2,2):
                     pos = [self.taxiPos[0],self.taxiPos[1]]
                     pos[direc] += step
-
-                    s1 = State(pos[0],pos[1],self.passenger,self.dest)
-                    if(self.isValidTransition(s1)):
-                        neigh.append(s1)
+                    neigh.append(State(pos[0],pos[1],self.passenger,self.dest))
         
         return neigh
 
@@ -93,6 +81,15 @@ class MDP:
     def __init__(self,m:Map):
         self.map = m
         State.map = m
+
+    # Checks if s -> s1 transition possible or not
+    def isValidTransition(self,s,s1):
+        
+        pos = s1.taxiPos
+        if(pos[1] >= self.map.height or pos[0] < 0 or pos[0] >= self.map.width or pos[1] < 0 or self.map.isWall(s.taxiPos,s1.taxiPos)):
+            return False
+
+        return True
 
     # Trnsition function 
     def T(self,s:State ,a ,s1:State):
@@ -116,7 +113,7 @@ class MDP:
                 direc[i] = (s.taxiPos[0]+direc[i][0],s.taxiPos[1]+direc[i][1])
 
             for i in direc:
-                if(s1.taxiPos == direc[i]):
+                if(s1.taxiPos == direc[i] and self.isValidTransition(s,s1)):
                     if(a==i):
                         return 0.85
                     else:
@@ -142,8 +139,8 @@ class MDP:
     # TODO: have to add max-norm using epsilon
     def valueIteration(self, e):
 
-        V = [[[[0 for k in range(len(self.map.depots))] for l in range(len(self.map.depots) + 2)] for i in range(self.map.width)] for j in range(self.map.height)]
-        P = [[[[None for k in range(len(self.map.depots))] for l in range(len(self.map.depots) + 2)] for i in range(self.map.width)] for j in range(self.map.height)]
+        V = [[[[0 for k in range(len(self.map.depots))] for l in range(len(self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
+        P = [[[[None for k in range(len(self.map.depots))] for l in range(len(self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
 
         gamma = 0.9
 
@@ -168,20 +165,20 @@ class MDP:
                                     curr = 0
                                     for s1 in neigh:
                                         t = self.T(s,a,s1)
-                                        # print(s.taxiPos,s.passenger,s.dest, '=>', s1.taxiPos,s1.passenger,s1.dest, a, t, t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)]),V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)])
+                                        # print(s.taxiPos,s.passenger,s.dest, '=>', s1.taxiPos,s1.passenger,s1.dest, a, t, t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)])
 
                                         if(t>0):
-                                            curr += t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[1]][s1.taxiPos[0]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)])
+                                            curr += t*(self.R(s,a,s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(s1.passenger)][self.map.dtoi(s1.dest)])
                                     # print('----CURR: ' ,curr)
 
                                     if(maxx == None or maxx[0] < curr):
                                         maxx = [curr,a]
                             
                             # print(s.taxiPos,s.passenger, s.dest, maxx,'\n')
-                            if(maxx != None and abs(maxx[0] - V[y][x][p][d]) > e):
+                            if(maxx != None and abs(maxx[0] - V[x][y][p][d]) > e):
                                 changed = True
-                                V[y][x][p][d] = maxx[0]
-                                P[y][x][p][d] = maxx[1]
+                                V[x][y][p][d] = maxx[0]
+                                P[x][y][p][d] = maxx[1]
 
                             # print(y,x,p,maxx)
 
@@ -194,7 +191,7 @@ class MDP:
                 for y in range(self.map.height-1,-1,-1):
                     for x in range(self.map.width):
                         # print(['{0:.2f}'.format(i) for i in V[y][x][p][d]],end = ', ')
-                        print(P[y][x][p][d],end = ', ')
+                        print(P[x][y][p][d],end = ', ')
                     print()  
 
                 
@@ -212,12 +209,12 @@ class RL:
 
 
 walls = {
-    (0,0):(1,0), 
-    (0,1):(1,1),
-    (1,3):(2,3),
-    (1,4):(2,4),
-    (2,0):(3,0),
-    (2,1):(3,1)
+    (0,0):{(1,0):True}, 
+    (0,1):{(1,1):True},
+    (1,3):{(2,3):True},
+    (1,4):{(2,4):True},
+    (2,0):{(3,0):True},
+    (2,1):{(3,1):True}
 }
 
 depots = {
