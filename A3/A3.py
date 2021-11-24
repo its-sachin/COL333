@@ -434,25 +434,14 @@ class MDP:
                     print()
 
 
+n = 10000
 class RL:
     
     def __init__(self, map: Map):
         self.map = map
         State.map = map
 
-    def getRandomState(self):
-        x = random.randint(0,self.map.width-1)
-        y = random.randint(0,self.map.height-1)
-        d = self.map.itod(random.randint(1, 4)-1)
-
-        while True:
-            p = self.map.itod(random.randint(1, 5)-1)
-            if(p!=d):
-                break
-
-        return State(x,y,p,d)
-
-    def Qlearning(self, e):
+    def generalLearning(self, e, numEpisode , isE_Greedy, isQ):
 
         Q = [[[[[0 for a in range(6)] for k in range(len(self.map.depots))] 
                 for l in range(len(self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
@@ -461,6 +450,20 @@ class RL:
         gamma = 0.9
 
         actions = ['PICK', 'DROP', 'N', 'S', 'W', 'E']
+
+        # Some helper functions
+
+        def getRandomState():
+            x = random.randint(0,self.map.width-1)
+            y = random.randint(0,self.map.height-1)
+            d = self.map.itod(random.randint(1, 4)-1)
+
+            while True:
+                p = self.map.itod(random.randint(1, 5)-1)
+                if(p!=d):
+                    break
+
+            return State(x,y,p,d)
 
         def getVal(s: State, a):
             return Q[s.taxiPos[0]][s.taxiPos[1]][self.map.dtoi(s.passenger)][self.map.dtoi(s.dest)][a]
@@ -475,24 +478,56 @@ class RL:
                     j = i
             return j
 
-        for _ in range(100000):
-            
-            s = self.getRandomState()
+        def e_greedy(s,e,it):
+            prob = random.uniform(0,1)
+            if(prob > e):
+                return getBest(s)
+            else:
+                return random.randint(0,5)
 
+        def decay(s,e,it):
+            prob = random.uniform(0,1)
+            # TODO: Can change this decay function
+            if(prob > e/it):
+                return getBest(s)
+            else:
+                return random.randint(0,5)
+
+        def QLearning(policy,it):
+            s = getRandomState()
             while(not s.isTerminal()):
-                prob = random.uniform(0,1)
-
-                if(prob > e):
-                    a = getBest(s)
-
-                else:
-                    a = random.randint(0,5)
-
+                a = policy(s,e,it)
                 s1,r = s.getNext(actions[a])
                 val = (1-alpha)*getVal(s,a) + alpha*(r + gamma*getVal(s1,getBest(s1)))
                 setVal(s,a,val)
-
                 s = s1
+        
+        def SARSA(policy,it):
+            s = getRandomState()
+            a = policy(s,e)
+            while(not s.isTerminal()):
+                s1,r = s.getNext(actions[a])
+                a1 = policy(s1,e,it)
+                val = (1-alpha)*getVal(s,a) + alpha*(r + gamma*getVal(s1,a1))
+                setVal(s,a,val)
+                s = s1
+                a = a1
+
+    # ---------------------------------------------------------------------------------
+
+        # Actual Computation
+
+        if(isE_Greedy):
+            policy = e_greedy
+        else:
+            policy = decay
+
+        for _ in range(1,numEpisode+1):
+            
+            if(isQ):
+                QLearning(policy,_)
+            else:
+                SARSA(policy,_)
 
             print('Iteration', _, end='\r')
 
@@ -505,8 +540,22 @@ class RL:
                         # print(['{0:.2f}'.format(i) for i in Q[y][x][p][d]],end = ', ')
                         print( actions[Q[y][x][p][d].index(max(Q[y][x][p][d]))],end = ', ')
                     print()
+        
+        return Q
 
+#   Utilise thsese Q table as per output format 
 
+    def Qlearning_E(self,e):
+        Q = self.generalLearning(e,n,True,True)
+    
+    def Qlearning_D(self,e):
+        Q = self.generalLearning(e,n,False,True)
+
+    def SARSA_E(self,e):
+        Q = self.generalLearning(e,n,True,False)
+
+    def SARSA_D(self,e):
+        Q = self.generalLearning(e,n,False,False)
 
 
 
@@ -537,4 +586,7 @@ M1 = Map(5, 5, walls, depots)
 # mdp.policyIteration_l()
 
 rl = RL(M1)
-rl.Qlearning(0.1)
+# rl.Qlearning_E(0.1)
+rl.Qlearning_D(0.1)
+# rl.SARSA_E(0.1)
+# rl.SARSA_D(0.1)
