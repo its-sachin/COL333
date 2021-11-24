@@ -94,6 +94,7 @@ class State:
 
         return neigh
 
+    # Gives (next_state,reward) pair for any (state,action) pair
     def getNext(self, a):
         neigh = []
 
@@ -151,6 +152,7 @@ class State:
                     return s1,-1
                 return self,-1
 
+    # Checks if state is terminal or not
     def isTerminal(self):
         # if(self.passenger == self.dest and self.taxiPos ==  self.map.depots[self.passenger]):
         if(self.passenger == self.dest):
@@ -433,14 +435,16 @@ class MDP:
                         print(P[x][y][p][d], end=', ')
                     print()
 
-
+# Change this value for number of episodes in learning
 n = 10000
+
 class RL:
     
     def __init__(self, map: Map):
         self.map = map
         State.map = map
 
+    # Generalised learning that can perform any learning specified in question (by changing parameters)
     def generalLearning(self, e, numEpisode , isE_Greedy, isQ):
 
         Q = [[[[[0 for a in range(6)] for k in range(len(self.map.depots))] 
