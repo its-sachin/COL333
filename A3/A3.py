@@ -50,6 +50,15 @@ class State:
         self.passenger = p
         self.dest = d
 
+    # Checks if self -> s1 transition possible or not
+    def isValidTransition(self, s1):
+
+        pos = s1.taxiPos
+        if(pos[1] >= State.map.height or pos[0] < 0 or pos[0] >= State.map.width or pos[1] < 0 or State.map.isWall(self.taxiPos, s1.taxiPos)):
+            return False
+
+        return True
+
     # Gives all possible tranitions from current state (self)
     def getNeighbours(self, a):
         neigh = []
@@ -85,20 +94,73 @@ class State:
 
         return neigh
 
+    def getNext(self, a):
+        neigh = []
+
+        if(a == 'DROP'):
+            depo = 'X'
+            for i in ['R', 'G', 'B', 'Y']:
+                if(State.map.depots[i] == self.taxiPos):
+                    depo = i
+                    break
+
+            if(self.passenger != 'T'): deop = 'X'
+            s1 = State(self.taxiPos[0], self.taxiPos[1], depo, self.dest)
+
+            if(depo == 'X'):
+                return s1,-10
+
+            elif(s1.taxiPos == self.map.depots[s1.passenger]):
+                if(s1.passenger == s1.dest):
+                    return s1,20
+                else:
+                    return s1,-1
+
+        elif(a == 'PICK'):
+            if(self.passenger != 'T' and self.passenger != 'X' and self.taxiPos == self.map.depots[self.passenger]):
+                    return State(self.taxiPos[0], self.taxiPos[1], 'T', self.dest),-1
+            else:
+                    return State(self.taxiPos[0], self.taxiPos[1], 'X', self.dest),-10
+        else:
+
+            direc = {
+                'N': [0, 1],
+                'S': [0, -1],
+                'E': [1, 0],
+                'W': [-1, 0],
+            }
+
+            for i in direc:
+                direc[i] = (self.taxiPos[0]+direc[i][0], self.taxiPos[1]+direc[i][1])
+
+            prob = random.uniform(0,1)
+            if(prob <= 0.85):
+                s1 = State(direc[a][0],direc[a][1],self.passenger,self.dest)
+                if(self.isValidTransition(s1)):
+                    return s1,-1
+                return self,-1
+
+            else:
+                i = a
+                action = ['N','S','E','W']
+                while(i!=a):
+                    i = action[random.randint(0,3)]
+
+                s1 = State(direc[i][0],direc[i][1],self.passenger,self.dest)
+                if(self.isValidTransition(s1)):
+                    return s1,-1
+                return self,-1
+
+    def isTerminal(self):
+        # if(self.passenger == self.dest and self.taxiPos ==  self.map.depots[self.passenger]):
+        if(self.passenger == self.dest):
+            return True
+        return False
 
 class MDP:
     def __init__(self, m: Map):
         self.map = m
         State.map = m
-
-    # Checks if s -> s1 transition possible or not
-    def isValidTransition(self, s, s1):
-
-        pos = s1.taxiPos
-        if(pos[1] >= self.map.height or pos[0] < 0 or pos[0] >= self.map.width or pos[1] < 0 or self.map.isWall(s.taxiPos, s1.taxiPos)):
-            return False
-
-        return True
 
     # Trnsition function
     def T(self, s: State, a, s1: State):
@@ -122,7 +184,7 @@ class MDP:
                 direc[i] = (s.taxiPos[0]+direc[i][0], s.taxiPos[1]+direc[i][1])
 
             for i in direc:
-                if(s1.taxiPos == direc[i] and self.isValidTransition(s, s1)):
+                if(s1.taxiPos == direc[i] and s.isValidTransition(s1)):
                     if(a == i):
                         return 0.85
                     else:
@@ -134,10 +196,14 @@ class MDP:
     def R(self, s, a, s1):
 
         if(a == 'DROP'):
-            if(s.passenger == 'T' and s1.passenger == s1.dest):
-                return 20
-            else:
+            if(s1.passenger == 'X'):
                 return -10
+
+            elif(s1.taxiPos == self.map.depots[s1.passenger]):
+                if(s1.passenger == s1.dest):
+                    return 20
+                else:
+                    return -1
 
         if(a == 'PICK' and s1.passenger == 'X'):
             return -10
@@ -369,8 +435,79 @@ class MDP:
 
 
 class RL:
+    
     def __init__(self, map: Map):
         self.map = map
+        State.map = map
+
+    def getRandomState(self):
+        x = random.randint(0,self.map.width-1)
+        y = random.randint(0,self.map.height-1)
+        d = self.map.itod(random.randint(1, 4)-1)
+
+        while True:
+            p = self.map.itod(random.randint(1, 5)-1)
+            if(p!=d):
+                break
+
+        return State(x,y,p,d)
+
+    def Qlearning(self, e):
+
+        Q = [[[[[0 for a in range(6)] for k in range(len(self.map.depots))] 
+                for l in range(len(self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
+
+        alpha = 0.1
+        gamma = 0.9
+
+        actions = ['PICK', 'DROP', 'N', 'S', 'W', 'E']
+
+        def getVal(s: State, a):
+            return Q[s.taxiPos[0]][s.taxiPos[1]][self.map.dtoi(s.passenger)][self.map.dtoi(s.dest)][a]
+        
+        def setVal(s: State, a, val):
+            Q[s.taxiPos[0]][s.taxiPos[1]][self.map.dtoi(s.passenger)][self.map.dtoi(s.dest)][a] = val
+
+        def getBest(s: State):
+            j  = 2
+            for i in range(6):
+                if(getVal(s,i) > getVal(s,j)):
+                    j = i
+            return j
+
+        for _ in range(100000):
+            
+            s = self.getRandomState()
+
+            while(not s.isTerminal()):
+                prob = random.uniform(0,1)
+
+                if(prob > e):
+                    a = getBest(s)
+
+                else:
+                    a = random.randint(0,5)
+
+                s1,r = s.getNext(actions[a])
+                val = (1-alpha)*getVal(s,a) + alpha*(r + gamma*getVal(s1,getBest(s1)))
+                setVal(s,a,val)
+
+                s = s1
+
+            print('Iteration', _, end='\r')
+
+        for p in range(len(self.map.depots)+1):
+            for d in range(len(self.map.depots)):
+                print('\nSTART: ', self.map.itod(p), 
+                        'DEST: ', self.map.itod(d))
+                for y in range(self.map.height-1, -1, -1):
+                    for x in range(self.map.width):
+                        # print(['{0:.2f}'.format(i) for i in Q[y][x][p][d]],end = ', ')
+                        print( actions[Q[y][x][p][d].index(max(Q[y][x][p][d]))],end = ', ')
+                    print()
+
+
+
 
 
 walls = {
@@ -394,7 +531,10 @@ depots = {
 M1 = Map(5, 5, walls, depots)
 # M1.setDest()
 
-mdp = MDP(M1)
+# mdp = MDP(M1)
 # mdp.valueIteration(0.1)
 # mdp.policyIteration(0.1)
-mdp.policyIteration_l()
+# mdp.policyIteration_l()
+
+rl = RL(M1)
+rl.Qlearning(0.1)
