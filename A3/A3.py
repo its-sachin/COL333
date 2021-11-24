@@ -1,5 +1,6 @@
 from math import degrees
 import random
+import numpy as np
 
 
 class Map:
@@ -281,6 +282,91 @@ class MDP:
                         print(P[x][y][p][d], end=', ')
                     print()
 
+    def policyIteration_l(self):
+        w = self.map.width
+        h = self.map.height
+        de = len(self.map.depots)
+        gamma = 0.9
+        V = [[[[0 for k in range(len(self.map.depots))] for l in range(len(
+            self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
+        P = [[[['N' for k in range(len(self.map.depots))] for l in range(len(
+            self.map.depots) + 2)] for i in range(self.map.height)] for j in range(self.map.width)]
+        changed = True
+        i = 0
+        while changed:
+            matrix = []
+            const = []
+            changed = False
+            for x in range(self.map.width):
+                for y in range(self.map.height):
+                    for p in range(len(self.map.depots) + 2):
+                        for d in range(len(self.map.depots)):
+                            action = P[x][y][p][d]
+                            a = [0 for i in range(w*h*de*(de+2))]
+                            s = State(x, y, self.map.itod(
+                                p), self.map.itod(d))
+                            neigh = s.getNeighbours(action)
+                            a[x*h*(de+2)*de+y*(de+2)*de+p*de+d] = 1
+                            if (len(neigh) > 0):
+                                r = 0
+                                for s1 in neigh:
+                                    t = self.T(s, action, s1)
+                                    if (t != 0):
+                                        r += t*self.R(s, action, s1)
+                                        a[s1.taxiPos[0]*h*(de+2)*de+s1.taxiPos[1]*(de+2)*de+self.map.dtoi(
+                                            s1.passenger)*de+self.map.dtoi(s1.dest)] = -1*gamma*t
+                                const.append(r)
+                            else:
+                                const.append(0)
+                            matrix.append(a)
+            # matrix = np.array(matrix)
+            # const = np.array(const)
+            ans = np.linalg.solve(np.array(matrix), np.array(const))
+            for x in range(self.map.width):
+                for y in range(self.map.height):
+                    for p in range(len(self.map.depots) + 2):
+                        for d in range(len(self.map.depots)):
+                            V[x][y][p][d] = ans[x*h *
+                                                (de+2)*de+y*(de+2)*de+p*de+d]
+            if not changed:
+                for x in range(self.map.width):
+                    for y in range(self.map.height):
+                        for p in range(len(self.map.depots) + 2):
+                            for d in range(len(self.map.depots)):
+
+                                s = State(x, y, self.map.itod(
+                                    p), self.map.itod(d))
+                                maxx = None
+                                for a in ['PICK', 'DROP', 'N', 'S', 'W', 'E']:
+
+                                    neigh = s.getNeighbours(a)
+                                    if(len(neigh) > 0):
+                                        curr = 0
+                                        for s1 in neigh:
+                                            t = self.T(s, a, s1)
+
+                                            if(t > 0):
+                                                curr += t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][self.map.dtoi(
+                                                    s1.passenger)][self.map.dtoi(s1.dest)])
+
+                                        if(maxx == None or maxx[0] < curr):
+                                            maxx = [curr, a]
+
+                                if(maxx != None and maxx[1] != P[x][y][p][d]):
+                                    changed = True
+                                    P[x][y][p][d] = maxx[1]
+            i += 1
+            print('Iteration', i, end='\r')
+        for p in range(len(self.map.depots)+1):
+            for d in range(len(self.map.depots)):
+                print('\nSTART: ', self.map.itod(
+                    p), 'DEST: ', self.map.itod(d))
+                for y in range(self.map.height-1, -1, -1):
+                    for x in range(self.map.width):
+                        # print(['{0:.2f}'.format(i) for i in V[y][x][p][d]],end = ', ')
+                        print(P[x][y][p][d], end=', ')
+                    print()
+
 
 class RL:
     def __init__(self, map: Map):
@@ -309,5 +395,6 @@ M1 = Map(5, 5, walls, depots)
 # M1.setDest()
 
 mdp = MDP(M1)
-mdp.valueIteration(0.1)
-mdp.policyIteration(0.1)
+# mdp.valueIteration(0.1)
+# mdp.policyIteration(0.1)
+mdp.policyIteration_l()
