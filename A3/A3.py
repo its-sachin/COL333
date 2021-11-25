@@ -3,6 +3,7 @@ import random
 import numpy as np
 from numpy.core.fromnumeric import shape
 from matplotlib import pyplot as plt
+from sys import argv
 
 
 class Map:
@@ -228,6 +229,7 @@ class Table:
                                     for x in range(self.map.width):
                                         val = self.table[x][y][i][j][p][d]
                                         P.table[x][y][i][j][p][d] = actions[val.index(max(val))]
+        return P
 
     def printVal(self):
 
@@ -562,6 +564,16 @@ class RL:
         self.map = map
         State.map = map
 
+    def getRandomState(self):
+        x1 = random.randint(0, self.map.width-1)
+        y1 = random.randint(0, self.map.height-1)
+        d = self.map.itod(random.randint(1, len(self.map.depots))-1)
+        p = d
+        while p == d:
+            p = self.map.itod(random.randint(1, len(self.map.depots))-1)
+        return State((x1, y1), self.map.depots[p], False, d)
+
+
     # Generalised learning that can perform any learning specified in question (by changing parameters)
     def generalLearning(self, e, isE_Greedy, isQ, alpha=0.25, gamma=0.99, maxLen = None):
 
@@ -575,23 +587,6 @@ class RL:
                 if(Q.getVal(s, i) > Q.getVal(s, j)):
                     j = i
             return j
-
-        def getRandomState():
-            x1 = random.randint(0, self.map.width-1)
-            y1 = random.randint(0, self.map.height-1)
-            d = self.map.itod(random.randint(1, len(self.map.depots))-1)
-            p = random.randint(0, 1)
-
-            if(p == 1):
-                return State((x1, y1), (x1, y1), True, d)
-            else:
-                while True:
-                    x2 = random.randint(0, self.map.width-1)
-                    y2 = random.randint(0, self.map.height-1)
-                    if((x2, y2) != self.map.depots[d]):
-                        break
-
-                return State((x1, y1), (x2, y2), False, d)
 
         def e_greedy(s, e, it=0):
             prob = random.uniform(0, 1)
@@ -609,7 +604,7 @@ class RL:
                 return random.randint(0, 5)
 
         def QLearning(policy, it):
-            s = getRandomState()
+            s = self.getRandomState()
             while(not s.isTerminal()):
                 a = policy(s, e, it)
                 s1, r = s.getNext(actions[a])
@@ -619,7 +614,7 @@ class RL:
                 s = s1         
 
         def SARSA(policy, it):
-            s = getRandomState()
+            s = self.getRandomState()
             a = policy(s, e, it)
             while(not s.isTerminal()):
                 s1, r = s.getNext(actions[a])
@@ -731,6 +726,9 @@ M2 = Map(10, 10, walls2, depots2)
 
 
 def quesA2a():
+
+    print('\n\n-----------RUNNING QUES A.2.a--------------\n\n')
+
     mdp = MDP(M1)
     _,n = mdp.valueIteration(0.1,0.9)
     # V.printVal()
@@ -738,6 +736,9 @@ def quesA2a():
 
 
 def quesA2b():
+
+    print('\n\n-----------RUNNING QUES A.2.b--------------\n\n')
+
     mdp = MDP(M1)
     e = 0.1
     rng = [0.01, 0.1, 0.5, 0.8, 0.99]
@@ -759,6 +760,9 @@ def quesA2b():
     plt.show()
 
 def quesA2C(M:Map,taxi,passenger,dest):
+
+    print('\n\n-----------RUNNING QUES A.2.c--------------\n\n')
+
     s = State(M.depots[taxi],M.depots[passenger],False,dest)
     mdp = MDP(M)
 
@@ -787,6 +791,9 @@ policyE = []
 
 
 def quesA3b():
+
+    print('\n\n-----------RUNNING QUES A.3.b--------------\n\n')
+
     global policyE
     mdp = MDP(M1)
     e = 0.1
@@ -811,29 +818,9 @@ def quesA3b():
     plt.legend(rng, loc="lower right")
     plt.show()
 
-
-# quesA2a()
-# quesA3b()
-
-
-walls = {
-    (0, 0): {(1, 0): True},
-    (0, 1): {(1, 1): True},
-    (0, 2): {(1, 2): True},
-    (0, 3): {(1, 3): True},
-
-    (2, 6): {(3, 6): True},
-    (2, 7): {(3, 7): True},
-    (2, 8): {(3, 8): True},
-    (2, 9): {(3, 9): True},
-
-    (3, 0): {(4, 0): True},
-    (3, 1): {(4, 1): True},
-    (3, 2): {(4, 2): True},
-    (3, 3): {(4, 3): True},
-}
-
 def quesB2():
+
+    print('\n\n-----------RUNNING QUES B.2--------------\n\n')
     global n
     rl = RL(M1)
 
@@ -855,11 +842,11 @@ def quesB2():
             print('[LEARNING',algos[algo],' with N = ',n,']')
             P = algo(0.1) 
             episodes.append(n)
-            n += 3000
+            n += 500
 
             avg = 0
             for ep in range(10):
-                s = rl.getRandomState()
+                s = rl.getRandomState(M1)
                 reward = 0
                 step = 0
                 while(step < 500 and not s.isTerminal()):
@@ -878,25 +865,72 @@ def quesB2():
         plot.set_ylabel('Discounted Reward')
         plot.set_xlabel('No of episodes')
         figure.canvas.set_window_title(algos[algo])
-        figure.savefig('QB2_' + algos[algo]+".png")
+        # figure.savefig('QB2_' + algos[algo]+".png")
     plt.show()
+
+def quesB3():
+
+    print('\n\n-----------RUNNING QUES B.3--------------\n\n')
+
+    global n
+
+    n = 5000
+    rl = RL(M1)
+    P = rl.Qlearning_D(0.1)
+
+    def perform(s):
+        step = 0
+        while(step < 500 and not s.isTerminal()):
+            print('STATE: [',s.taxiPos,s.passengerPos,s.picked,s.dest, ']')
+            a = P.getVal(s)
+            print('ACTION: [',a,']\n')
+            s1,r = s.getNext(a)
+            s = s1
+            step += 1
+
+        print('-----------------SIMUALTION ENDED ------------------\n\n')
+
+    for i in range(5):
+        s = rl.getRandomState()
+        print('RUNNING ON INSTANCE',i+1)
+        perform(s)
 
 # quesA2a()
 # quesA2b()
+# quesA3b()
 # quesA2C(M1,'R','Y','G')
-quesB2()
+# quesB2()
+# quesB3()
 
-# mdp = MDP(M1)
-# mdp = MDP(M2)
-# mdp.valueIteration(0.1)
-# mdp.policyIteration(0.1)
-# mdp.policyIteration_l()
+if(len(argv)==1):
+    quesA2a()
+    quesA2b()
+    quesA2C(M1,'R','Y','G')
+    quesA3b()
+    quesB2()
+    quesB3()
 
-# rl = RL(M1)
-# rl = RL(M2)
-# rl.Qlearning_E(0.1)
-# rl.Qlearning_D(0.1)
-# a = rl.SARSA_E(0.1)
-# a.printVal()
-# rl.SARSA_E(0.1)
-# rl.SARSA_D(0.1)
+else:
+    ques = argv[1]
+    if(ques=='A'):
+        spart = int(argv[2])
+        if(spart==2):
+            sspart = argv[3]
+            if(sspart=='a'):
+                quesA2a()
+            elif(sspart=='b'):
+                quesA2b()
+            else:
+                quesA2C(M1,'R','Y','G')
+        else:
+            quesA3b()
+
+    else:
+        spart = int(argv[2])
+        if(spart==2):
+            quesB2()
+        elif(spart==3):
+            quesB3()
+
+    
+
