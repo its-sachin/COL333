@@ -204,6 +204,17 @@ class Table:
             self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]
                                                    ][s.passengerPos[1]][p][self.map.dtoi(s.dest)] = val
 
+    def summ(self):
+        val = 0
+        for i in range(self.map.width):
+            for j in range(self.map.height):
+                for k in range(self.map.width):
+                    for l in range(self.map.height):
+                        for m in range(2):
+                            for n in range(len(self.map.depots)):
+                                val += self.table[i][j][k][l][m][n]
+        return val
+
     def printVal(self):
 
         actions = ['N', 'S', 'W', 'E', 'PICK', 'DROP']
@@ -247,7 +258,7 @@ class MDP:
     # Trnsition function
     def T(self, s: State, a, s1: State):
 
-        if(a == 'PICK' or a=='DROP'):
+        if(a == 'PICK' or a == 'DROP'):
             return 1
 
         else:
@@ -272,7 +283,7 @@ class MDP:
 
         return 0
 
-    def update(self,gamma,s,V):
+    def update(self, gamma, s, V):
         maxx = None
         for a in ['PICK', 'DROP', 'N', 'S', 'W', 'E']:
 
@@ -291,7 +302,7 @@ class MDP:
                     maxx = [curr, a]
         return maxx
 
-    def iterate(self,update):
+    def iterate(self, update):
         changed = False
         delta = 0
         for x1 in range(self.map.width):
@@ -303,24 +314,24 @@ class MDP:
 
                         if(picked):
                             s = State((x1, y1), (x1, y1),
-                                        picked, self.map.itod(d))
+                                      picked, self.map.itod(d))
                             delta = update(s, delta)
-                            if(type(delta)==bool and delta):
+                            if(type(delta) == bool and delta):
                                 changed = True
                         else:
                             for x2 in range(self.map.width):
                                 for y2 in range(self.map.height):
                                     s = State((x1, y1), (x2, y2),
-                                                picked, self.map.itod(d))
+                                              picked, self.map.itod(d))
                                     delta = update(s, delta)
-                                    if(type(delta)==bool and delta):
+                                    if(type(delta) == bool and delta):
                                         changed = True
 
-        return (delta,changed)
+        return (delta, changed)
 
     # Performs value iteration
     # TODO: have to add max-norm using epsilon
-    def valueIteration(self, e, gamma = 0.99):
+    def valueIteration(self, e, gamma=0.99):
 
         V = Table(self.map, 'VALUE')
         P = Table(self.map, 'POLICY')
@@ -330,7 +341,7 @@ class MDP:
 
         def update(s, delta):
 
-            maxx = self.update(gamma,s,V)
+            maxx = self.update(gamma, s, V)
 
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None):
@@ -351,11 +362,12 @@ class MDP:
             print('Iteration', i, delta, end='\r')
 
         # P.printVal()
-        return P,i
+        return P, i
 
     def policyIteration(self, e, gamma=0.99):
         V = Table(self.map, 'VALUE')
         P = Table(self.map, 'POLICY')
+        global policyE
 
         delta = 5
         i = 0
@@ -379,9 +391,9 @@ class MDP:
                     delta = change
             return delta
 
-        def updateP(s,delta=0):
+        def updateP(s, delta=0):
             boolV = False
-            maxx = self.update(gamma,s,V)
+            maxx = self.update(gamma, s, V)
 
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None and maxx[1] != P.getVal(s)):
@@ -390,7 +402,6 @@ class MDP:
             return boolV
 
         # ---------------------------------------------------------------------------------------
-
         while flag:
 
             # policy evaluation phase
@@ -398,15 +409,15 @@ class MDP:
             delta = 5
             while delta >= (1-gamma)*e/gamma:
                 delta = self.iterate(update)[0]
-
+            policyE.append(V.summ())
             # policy improvement phase
             flag = self.iterate(updateP)[1]
 
             i += 1
             print('Iteration', i, end='\r')
-        P.printVal()
+        # P.printVal()
 
-    def policyIteration_l(self, gamma = 0.99):
+    def policyIteration_l(self, gamma=0.99):
         w = self.map.width
         h = self.map.height
         de = len(self.map.depots)
@@ -415,9 +426,9 @@ class MDP:
         changed = True
         i = 0
 
-        def updateP(s,delta=0):
+        def updateP(s, delta=0):
             boolV = False
-            maxx = self.update(gamma,s,V)
+            maxx = self.update(gamma, s, V)
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None and maxx[1] != P.getVal(s)):
                 P.setVal(s, maxx[1])
@@ -666,33 +677,65 @@ mdp = MDP(M1)
 # rl.SARSA_E(0.1)
 # rl.SARSA_D(0.1)
 
+
 def quesA2a():
     mdp = MDP(M1)
-    V,n = mdp.valueIteration(0.1,0.99)
+    V, n = mdp.valueIteration(0.1, 0.99)
     # V.printVal()
-    print('\nEPSILON',0.1,'NO OF ITERATIONS:',n )
+    print('\nEPSILON', 0.1, 'NO OF ITERATIONS:', n)
+
 
 def quesA2b():
     mdp = MDP(M1)
     e = 0.1
-    rng = [0.01, 0.1, 0.5, 0.8,0.99]
-    x,y = [],[]
+    rng = [0.01, 0.1, 0.5, 0.8, 0.99]
+    x, y = [], []
     for gamma in rng:
-        V,n = mdp.valueIteration(e,gamma)
-        print('\nGAMMA',gamma,'NO OF ITERATIONS:',n )
+        V, n = mdp.valueIteration(e, gamma)
+        print('\nGAMMA', gamma, 'NO OF ITERATIONS:', n)
         y.append((1-gamma)*e/gamma)
         x.append(n)
-    print(x,y)
-    plt.plot(x,y, "r", linewidth = 2, marker = 'o', markerfacecolor = "r", label = "Max-norm dist")
-    plt.grid(True, color = "k")
+    print(x, y)
+    plt.plot(x, y, "r", linewidth=2, marker='o',
+             markerfacecolor="r", label="Max-norm dist")
+    plt.grid(True, color="k")
     plt.title('Max-norm dist VS No of iterations ')
     plt.ylabel('Max-norm dist')
     plt.xlabel('No of iterations')
     plt.show()
 
 
+policyE = []
+
+
+def quesA3b():
+    global policyE
+    mdp = MDP(M1)
+    e = 0.1
+    rng = [0.01, 0.1, 0.5, 0.8, 0.99]
+    col = ['r', 'b', 'g', 'c', 'y']
+    for i in range(len(rng)):
+        policyE = []
+        mdp.policyIteration(e, rng[i])
+        m = policyE[-1]-policyE[0]
+        if m == 0:
+            policyE = [0 for i in range(len(policyE))]
+        else:
+            policyE = [abs((policyE[-1]-policyE[i])/m)
+                       for i in range(len(policyE))]
+        x = [i for i in range(len(policyE))]
+        plt.plot(x, policyE, col[i], linewidth=2, marker='o',
+                 markerfacecolor=col[i], label="Policy Loss")
+        plt.grid(True, color="k")
+    plt.title('Policy Loss VS No of iterations ')
+    plt.ylabel('Policy Loss')
+    plt.xlabel('No of iterations')
+    plt.legend(rng, loc="lower right")
+    plt.show()
+
+
 # quesA2a()
-quesA2b()
+quesA3b()
 
 
 walls = {
