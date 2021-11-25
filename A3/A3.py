@@ -11,6 +11,8 @@ class Map:
         self.walls = walls
         self.depots = depots
 
+        self.dests = list(self.depots.keys())
+
     # Checks if there is any wall between cell point1 and cell point2
     def isWall(self, point1, point2):
         try:
@@ -24,17 +26,15 @@ class Map:
 
     # integer to depot
     def itod(self, i):
-        a = ['R', 'G', 'B', 'Y', 'T', 'X']
-        return a[i]
+        return self.dests[i]
 
     # depot to integer (Useful for array indexing)
     def dtoi(self, d):
-        a = ['R', 'G', 'B', 'Y', 'T', 'X']
-        return a.index(d)
+        return self.dests.index(d)
 
-    # Sets random destination out of 4 depots
+    # Sets random destination out of depots
     def setDest(self):
-        i = random.randint(1, 4)
+        i = random.randint(1, len(self.depots))
         self.dest = self.itod(i-1)
 
         while True:
@@ -157,6 +157,7 @@ class State:
 
     # Checks if state is terminal or not
     def isTerminal(self):
+        # print(self.taxiPos,self.passengerPos,self.picked,self.dest)
         # if(self.passenger == self.dest and self.taxiPos ==  self.map.depots[self.passenger]):
         if((not self.picked) and self.passengerPos == State.map.depots[self.dest]):
             return True
@@ -677,7 +678,7 @@ class RL:
         def getRandomState():
             x1 = random.randint(0, self.map.width-1)
             y1 = random.randint(0, self.map.height-1)
-            d = self.map.itod(random.randint(1, 4)-1)
+            d = self.map.itod(random.randint(1, len(self.map.depots))-1)
             p = random.randint(0, 1)
 
             if(p == 1):
@@ -790,14 +791,70 @@ depots = {
 
 # Flow of program: Map created -> destination set -> MDP called -> Value iteration solves MDP -> calls T() and R() in between and makes State class instances
 M1 = Map(5, 5, walls, depots)
-M1.setDest()
 
 mdp = MDP(M1)
-mdp.valueIteration(0.1)
-# mdp.policyIteration(0.1)
+# mdp.valueIteration(0.1)
+mdp.policyIteration(0.1)
 # mdp.policyIteration_l()
 
 # rl = RL(M1)
+# rl.Qlearning_E(0.1)
+# rl.Qlearning_D(0.1)
+# rl.SARSA_E(0.1)
+# rl.SARSA_D(0.1)
+
+
+walls = {
+    (0, 0): {(1, 0): True},
+    (0, 1): {(1, 1): True},
+    (0, 2): {(1, 2): True},
+    (0, 3): {(1, 3): True},
+
+    (2, 6): {(3, 6): True},
+    (2, 7): {(3, 7): True},
+    (2, 8): {(3, 8): True},
+    (2, 9): {(3, 9): True},
+
+    (3, 0): {(4, 0): True},
+    (3, 1): {(4, 1): True},
+    (3, 2): {(4, 2): True},
+    (3, 3): {(4, 3): True},
+
+    (5, 4): {(6, 4): True},
+    (5, 5): {(6, 5): True},
+    (5, 6): {(6, 6): True},
+    (5, 7): {(6, 7): True},
+
+    (7, 0): {(8, 0): True},
+    (7, 1): {(8, 1): True},
+    (7, 2): {(8, 2): True},
+    (7, 3): {(8, 3): True},
+
+    (7, 6): {(8, 0): True},
+    (7, 7): {(8, 0): True},
+    (7, 8): {(8, 0): True},
+    (7, 9): {(8, 0): True},
+}
+
+depots = {
+    'Y': (0, 1),
+    'R': (0, 9),
+    'W': (3, 6),
+    'B': (4, 0),
+    'G': (5, 9),
+    'M': (6, 5),
+    'C': (8, 9),
+    'P': (9, 0)
+}
+
+# M2 = Map(10, 10, walls, depots)
+
+# mdp = MDP(M2)
+# mdp.valueIteration(0.1)
+# mdp.policyIteration(0.1)
+# mdp.policyIteration_l()
+
+# rl = RL(M2)
 # rl.Qlearning_E(0.1)
 # rl.Qlearning_D(0.1)
 # rl.SARSA_E(0.1)
