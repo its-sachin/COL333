@@ -246,10 +246,7 @@ class MDP:
     # Trnsition function
     def T(self, s: State, a, s1: State):
 
-        if(a == 'PICK'):
-            return 1
-
-        elif(a == 'DROP'):
+        if(a == 'PICK' or a=='DROP'):
             return 1
 
         else:
@@ -274,35 +271,65 @@ class MDP:
 
         return 0
 
+    def update(self,gamma,s,V):
+        maxx = None
+        for a in ['PICK', 'DROP', 'N', 'S', 'W', 'E']:
+
+            neigh = s.getNeighbours(a)
+            # print(a,len(neigh))
+            if(len(neigh) > 0):
+                curr = 0
+                for s1 in neigh:
+                    t = self.T(s, a, s1)
+                    if(t > 0):
+                        # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(s.R(a, s1) + gamma*V.getVal(s1))
+                        curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
+                # print('----CURR: ' ,curr)
+
+                if(maxx == None or maxx[0] < curr):
+                    maxx = [curr, a]
+        return maxx
+
+    def iterate(self,update):
+        changed = False
+        delta = 0
+        for x1 in range(self.map.width):
+            for y1 in range(self.map.height):
+                for p in range(2):
+                    for d in range(len(self.map.depots)):
+
+                        picked = (p == 1)
+
+                        if(picked):
+                            s = State((x1, y1), (x1, y1),
+                                        picked, self.map.itod(d))
+                            delta = update(s, delta)
+                            if(type(delta)==bool and delta):
+                                changed = True
+                        else:
+                            for x2 in range(self.map.width):
+                                for y2 in range(self.map.height):
+                                    s = State((x1, y1), (x2, y2),
+                                                picked, self.map.itod(d))
+                                    delta = update(s, delta)
+                                    if(type(delta)==bool and delta):
+                                        changed = True
+
+        return (delta,changed)
+
     # Performs value iteration
     # TODO: have to add max-norm using epsilon
-    def valueIteration(self, e):
+    def valueIteration(self, e, gamma = 0.99):
 
         V = Table(self.map, 'VALUE')
         P = Table(self.map, 'POLICY')
 
-        gamma = 0.99
         delta = 5
         i = 0
 
         def update(s, delta):
 
-            maxx = None
-            for a in ['PICK', 'DROP', 'N', 'S', 'W', 'E']:
-
-                neigh = s.getNeighbours(a)
-                # print(a,len(neigh))
-                if(len(neigh) > 0):
-                    curr = 0
-                    for s1 in neigh:
-                        t = self.T(s, a, s1)
-                        if(t > 0):
-                            # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(s.R(a, s1) + gamma*V.getVal(s1))
-                            curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
-                    # print('----CURR: ' ,curr)
-
-                    if(maxx == None or maxx[0] < curr):
-                        maxx = [curr, a]
+            maxx = self.update(gamma,s,V)
 
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None):
@@ -314,49 +341,25 @@ class MDP:
                 # print('LOL',P[x1][y1][x2][y2][p][d])
             return delta
 
+        # ---------------------------------------------------------------------------------------
+
         while delta >= (1-gamma)*e/gamma:
 
-            delta = 0
-
-            for x1 in range(self.map.width):
-                for y1 in range(self.map.height):
-                    for p in range(2):
-                        for d in range(len(self.map.depots)):
-
-                            picked = (p == 1)
-
-                            if(picked):
-                                s = State((x1, y1), (x1, y1),
-                                          picked, self.map.itod(d))
-                                delta = update(s, delta)
-                            else:
-                                for x2 in range(self.map.width):
-                                    for y2 in range(self.map.height):
-                                        s = State((x1, y1), (x2, y2),
-                                                  picked, self.map.itod(d))
-                                        delta = update(s, delta)
-
+            delta = self.iterate(update)[0]
             i += 1
             print('Iteration', i, delta, end='\r')
 
         P.printVal()
 
-    def policyIteration(self, e):
+    def policyIteration(self, e, gamma=0.99):
         V = Table(self.map, 'VALUE')
         P = Table(self.map, 'POLICY')
 
-        gamma = 0.99
         delta = 5
         i = 0
         flag = True
 
         def update(s, delta):
-            x1, y1 = s.taxiPos
-            x2, y2 = s.passengerPos
-            p = 0
-            if(s.picked):
-                p = 1
-            d = self.map.dtoi(s.dest)
             a = P.getVal(s)
             neigh = s.getNeighbours(a)
             # print(a,len(neigh))
@@ -366,9 +369,6 @@ class MDP:
                     t = self.T(s, a, s1)
 
                     if(t > 0):
-                        l = 0
-                        if(s1.picked):
-                            l = 1
                         # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)])
                         curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
                 change = abs(curr - V.getVal(s))
@@ -377,92 +377,34 @@ class MDP:
                     delta = change
             return delta
 
-        def updateP(s):
+        def updateP(s,delta=0):
             boolV = False
-            x1, y1 = s.taxiPos
-            x2, y2 = s.passengerPos
-            p = 0
-            if(s.picked):
-                p = 1
-            d = self.map.dtoi(s.dest)
-            maxx = None
-            for a in ['PICK', 'DROP', 'N', 'S', 'W', 'E']:
-
-                neigh = s.getNeighbours(a)
-                # print(a,len(neigh))
-                if(len(neigh) > 0):
-                    curr = 0
-                    for s1 in neigh:
-                        t = self.T(s, a, s1)
-
-                        if(t > 0):
-                            l = 0
-                            if(s1.picked):
-                                l = 1
-                            # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)])
-                            curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
-                    # print('----CURR: ' ,curr)
-
-                    if(maxx == None or maxx[0] < curr):
-                        maxx = [curr, a]
+            maxx = self.update(gamma,s,V)
 
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None and maxx[1] != P.getVal(s)):
                 P.setVal(s, maxx[1])
                 boolV = True
             return boolV
+
+        # ---------------------------------------------------------------------------------------
+
         while flag:
+
             # policy evaluation phase
             flag = False
             delta = 5
             while delta >= (1-gamma)*e/gamma:
+                delta = self.iterate(update)[0]
 
-                delta = 0
-
-                for x1 in range(self.map.width):
-                    for y1 in range(self.map.height):
-                        for p in range(2):
-                            for d in range(len(self.map.depots)):
-
-                                picked = (p == 1)
-
-                                if(picked):
-                                    s = State((x1, y1), (x1, y1),
-                                              picked, self.map.itod(d))
-                                    delta = update(s, delta)
-                                else:
-                                    for x2 in range(self.map.width):
-                                        for y2 in range(self.map.height):
-                                            s = State((x1, y1), (x2, y2),
-                                                      picked, self.map.itod(d))
-                                            delta = update(s, delta)
             # policy improvement phase
-            for x1 in range(self.map.width):
-                for y1 in range(self.map.height):
-                    for p in range(2):
-                        for d in range(len(self.map.depots)):
+            flag = self.iterate(updateP)[1]
 
-                            picked = (p == 1)
-
-                            if(picked):
-                                s = State((x1, y1), (x1, y1),
-                                          picked, self.map.itod(d))
-                                boolV = updateP(s)
-                                if (boolV):
-                                    flag = True
-                            else:
-                                for x2 in range(self.map.width):
-                                    for y2 in range(self.map.height):
-                                        s = State((x1, y1), (x2, y2),
-                                                  picked, self.map.itod(d))
-                                        boolV = updateP(s)
-                                        if (boolV):
-                                            flag = True
             i += 1
             print('Iteration', i, end='\r')
         P.printVal()
 
-    def policyIteration_l(self):
+    def policyIteration_l(self, gamma = 0.99):
         w = self.map.width
         h = self.map.height
         de = len(self.map.depots)
@@ -470,46 +412,23 @@ class MDP:
         P = Table(self.map, 'POLICY')
         changed = True
         i = 0
-        gamma = 0.99
 
-        def updateP(s):
+        def updateP(s,delta=0):
             boolV = False
-            x1, y1 = s.taxiPos
-            x2, y2 = s.passengerPos
-            p = 0
-            if(s.picked):
-                p = 1
-            d = self.map.dtoi(s.dest)
-            maxx = None
-            for a in ['PICK', 'DROP', 'N', 'S', 'W', 'E']:
-
-                neigh = s.getNeighbours(a)
-                # print(a,len(neigh))
-                if(len(neigh) > 0):
-                    curr = 0
-                    for s1 in neigh:
-                        t = self.T(s, a, s1)
-
-                        if(t > 0):
-                            l = 0
-                            if(s1.picked):
-                                l = 1
-                            # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)])
-                            curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
-                    # print('----CURR: ' ,curr)
-
-                    if(maxx == None or maxx[0] < curr):
-                        maxx = [curr, a]
-
+            maxx = self.update(gamma,s,V)
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None and maxx[1] != P.getVal(s)):
                 P.setVal(s, maxx[1])
                 boolV = True
             return boolV
+
+        # ---------------------------------------------------------------------------------------
         while changed:
+
             matrix = []
             const = []
             changed = False
+
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for d in range(len(self.map.depots)):
@@ -538,6 +457,7 @@ class MDP:
                         else:
                             const.append(0)
                         matrix.append(temp)
+
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for x2 in range(self.map.width):
@@ -545,7 +465,7 @@ class MDP:
                             for d in range(len(self.map.depots)):
                                 s = State((x1, y1), (x2, y2),
                                           False, self.map.itod(d))
-                                a = P[x1][y1][x2][y2][0][d]
+                                a = P.getVal(s)
                                 temp = [0 for i in range(w*h*w*h*de+w*h*de)]
                                 neigh = s.getNeighbours(a)
                                 temp[w*h*de + x1*h*w*h*de+y1 *
@@ -586,27 +506,7 @@ class MDP:
                                 V.setVal(
                                     s, ans[w*h*de + x1*h*w*h*de+y1*w*h*de+x2*h*de+y2*de+d])
 
-            for x1 in range(self.map.width):
-                for y1 in range(self.map.height):
-                    for p in range(2):
-                        for d in range(len(self.map.depots)):
-
-                            picked = (p == 1)
-
-                            if(picked):
-                                s = State((x1, y1), (x1, y1),
-                                          picked, self.map.itod(d))
-                                boolV = updateP(s)
-                                if (boolV):
-                                    changed = True
-                            else:
-                                for x2 in range(self.map.width):
-                                    for y2 in range(self.map.height):
-                                        s = State((x1, y1), (x2, y2),
-                                                  picked, self.map.itod(d))
-                                        boolV = updateP(s)
-                                        if (boolV):
-                                            changed = True
+            changed = self.iterate(updateP)[1]
             i += 1
             print('Iteration', i, end='\r')
         P.printVal()
@@ -755,8 +655,8 @@ M1 = Map(5, 5, walls, depots)
 
 mdp = MDP(M1)
 # mdp.valueIteration(0.1)
-mdp.policyIteration(0.1)
-# mdp.policyIteration_l()
+# mdp.policyIteration(0.1)
+mdp.policyIteration_l()
 
 # rl = RL(M1)
 # rl.Qlearning_E(0.1)
