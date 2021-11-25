@@ -34,7 +34,6 @@ class Map:
         return self.dests.index(d)
         
 
-
 class State:
 
     def __init__(self, p1, p2, p, d):
@@ -142,9 +141,9 @@ class State:
                     i = action[random.randint(0, 3)]
 
                 if(self.picked):
-                    s1 = State(direc[a], direc[a], True, self.dest)
+                    s1 = State(direc[i], direc[i], True, self.dest)
                 else:
-                    s1 = State(direc[a], self.passengerPos, False, self.dest)
+                    s1 = State(direc[i], self.passengerPos, False, self.dest)
                 if(self.isValidTransition(s1)):
                     return s1, -1
                 return self, -1
@@ -195,6 +194,30 @@ class Table:
         else:
             self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]
                                                    ][s.passengerPos[1]][p][self.map.dtoi(s.dest)] = val
+
+    def QtoP(self):
+        if(self.mode == 'Q'):
+            P = Table(self.map, 'POLICY')
+
+            actions = ['N', 'S', 'W', 'E', 'PICK', 'DROP']
+
+            for p in range(2):
+                for d in range(len(self.map.depots)):
+                    if(p == 1):
+                        for y in range(self.map.height-1, -1, -1):
+                            for x in range(self.map.width):
+                                val = self.table[x][y][x][y][p][d]
+                                P.table[x][y][x][y][p][d] = actions[val.index(max(val))]
+
+                    else:
+    
+                        for i in range(self.map.width):
+                            for j in range(self.map.height):
+                                for y in range(self.map.height-1, -1, -1):
+                                    for x in range(self.map.width):
+                                        val = self.table[x][y][i][j][p][d]
+                                        P.table[x][y][i][j][p][d] = actions[val.index(max(val))]
+            return P
 
     def printVal(self):
 
@@ -520,7 +543,7 @@ class MDP:
 
 
 # Change this value for number of episodes in learning
-n = 10000
+n = 50000
 
 
 class RL:
@@ -530,16 +553,18 @@ class RL:
         State.map = map
 
     # Generalised learning that can perform any learning specified in question (by changing parameters)
-    def generalLearning(self, e, numEpisode, isE_Greedy, isQ):
+    def generalLearning(self, e, isE_Greedy, isQ, alpha=0.25, gamma=0.99, maxLen = None):
 
         Q = Table(self.map, 'Q')
-
-        alpha = 0.1
-        gamma = 0.9
-
         actions = ['N', 'S', 'W', 'E', 'PICK', 'DROP']
 
         # Some helper functions
+        def getBest(s: State):
+            j = 2
+            for i in range(6):
+                if(Q.getVal(s, i) > Q.getVal(s, j)):
+                    j = i
+            return j
 
         def getRandomState():
             x1 = random.randint(0, self.map.width-1)
@@ -558,14 +583,7 @@ class RL:
 
                 return State((x1, y1), (x2, y2), False, d)
 
-        def getBest(s: State):
-            j = 2
-            for i in range(6):
-                if(Q.getVal(s, i) > Q.getVal(s, j)):
-                    j = i
-            return j
-
-        def e_greedy(s, e, it):
+        def e_greedy(s, e, it=0):
             prob = random.uniform(0, 1)
             if(prob > e):
                 return getBest(s)
@@ -585,21 +603,20 @@ class RL:
             while(not s.isTerminal()):
                 a = policy(s, e, it)
                 s1, r = s.getNext(actions[a])
-                val = (1-alpha)*Q.getVal(s, a) + alpha * \
-                    (r + gamma*Q.getVal(s1, getBest(s1)))
+                val = (1-alpha)*Q.getVal(s, a) + alpha * (r + gamma*Q.getVal(s1, getBest(s1)))
                 Q.setVal(s, val, a)
                 # print(s.taxiPos,s.passengerPos,s.picked,s.dest,'[Action: ',actions[a],']->',s1.taxiPos,s1.passengerPos,s1.picked,s1.dest,'[Reward',r,']')
-                s = s1
+                s = s1         
 
         def SARSA(policy, it):
             s = getRandomState()
-            a = policy(s, e)
+            a = policy(s, e, it)
             while(not s.isTerminal()):
                 s1, r = s.getNext(actions[a])
                 a1 = policy(s1, e, it)
-                val = (1-alpha)*Q.getVal(s, a) + alpha * \
-                    (r + gamma*Q.getVal(s1, a1))
+                val = (1-alpha)*Q.getVal(s, a) + alpha * (r + gamma*Q.getVal(s1, a1))
                 Q.setVal(s, val, a)
+                # print(s.taxiPos,s.passengerPos,s.picked,s.dest,'[Action: ',actions[a],']->',s1.taxiPos,s1.passengerPos,s1.picked,s1.dest,'[Reward',r,']')
                 s = s1
                 a = a1
 
@@ -612,8 +629,7 @@ class RL:
         else:
             policy = decay
 
-        for _ in range(1, numEpisode+1):
-
+        for _ in range(1, n+1):        
             if(isQ):
                 QLearning(policy, _)
             else:
@@ -621,26 +637,25 @@ class RL:
 
             print('Iteration', _, end='\r')
 
-        Q.printVal()
+        print()
+        return Q.QtoP()
 
-        return Q
+#    Utilise thsese Q table as per output format
 
-#   Utilise thsese Q table as per output format
+    def Qlearning_E(self, e, alpha=0.25, maxLen = None):
+        return self.generalLearning(e, True, True, alpha, maxLen= maxLen)
 
-    def Qlearning_E(self, e):
-        Q = self.generalLearning(e, n, True, True)
+    def Qlearning_D(self, e, alpha=0.25, maxLen = None):
+        return self.generalLearning(e, False, True, alpha, maxLen= maxLen)
 
-    def Qlearning_D(self, e):
-        Q = self.generalLearning(e, n, False, True)
+    def SARSA_E(self, e, alpha=0.25, maxLen = None):
+        return self.generalLearning(e, True, False, alpha, maxLen= maxLen)
 
-    def SARSA_E(self, e):
-        Q = self.generalLearning(e, n, True, False)
-
-    def SARSA_D(self, e):
-        Q = self.generalLearning(e, n, False, False)
+    def SARSA_D(self, e, alpha=0.25, maxLen = None):
+        return self.generalLearning(e, False, False, alpha, maxLen= maxLen)
 
 
-walls = {
+walls1 = {
     (0, 0): {(1, 0): True},
     (0, 1): {(1, 1): True},
     (1, 3): {(2, 3): True},
@@ -649,85 +664,14 @@ walls = {
     (2, 1): {(3, 1): True}
 }
 
-depots = {
+depots1 = {
     'Y': (0, 0),
     'R': (0, 4),
     'B': (3, 0),
     'G': (4, 4)
 }
 
-
-# Flow of program: Map created -> destination set -> MDP called -> Value iteration solves MDP -> calls T() and R() in between and makes State class instances
-M1 = Map(5, 5, walls, depots)
-
-mdp = MDP(M1)
-# mdp.valueIteration(0.1)
-# mdp.policyIteration(0.1)
-# mdp.policyIteration_l()
-
-# rl = RL(M2)
-# rl.Qlearning_E(0.1)
-# rl.Qlearning_D(0.1)
-# rl.SARSA_E(0.1)
-# rl.SARSA_D(0.1)
-
-def quesA2a():
-    mdp = MDP(M1)
-    _,n = mdp.valueIteration(0.1,0.9)
-    # V.printVal()
-    print('\nEPSILON',0.1,'NO OF ITERATIONS:',n )
-
-def quesA2b():
-    mdp = MDP(M1)
-    e = 0.1
-    rng = [0.01, 0.1, 0.5, 0.8,0.99]
-    x,y = [],[]
-    for gamma in rng:
-        _,n = mdp.valueIteration(e,gamma)
-        print('\nGAMMA',gamma,'NO OF ITERATIONS:',n )
-        y.append((1-gamma)*e/gamma)
-        x.append(n)
-    print(x,y)
-    plt.figure(figsize=(10,5))
-    plt.plot(x,y, "r", linewidth = 2, marker = 'o', markerfacecolor = "r", label = "Max-norm dist")
-    plt.grid(True, color = "k")
-    plt.title('No of iterations VS Max-norm dist')
-    plt.ylabel('Max-norm dist')
-    plt.xlabel('No of iterations')
-    plt.show()
-
-def quesA2C(M:Map,taxi,passenger,dest):
-    s = State(M.depots[taxi],M.depots[passenger],False,dest)
-    mdp = MDP(M)
-
-    def perform(gamma,s):
-
-        print('[Gamma =',gamma,']\n')
-        print('EVALUATING(Value iteration)')
-        P,_ = mdp.valueIteration(0.1,gamma)
-        i = 0
-
-        print('SIMULATING')
-        while(i<20 and not s.isTerminal()):
-            print('STATE: [',s.taxiPos,s.passengerPos,s.picked,s.dest, ']')
-            a = P.getVal(s)
-            print('ACTION: [',a,']\n')
-            s1,r =  s.getNext(a)
-
-            s = s1
-            i += 1
-
-        print('-----------------SIMUALTION ENDED ------------------\n\n')
-    perform(0.1,s)
-    perform(0.99,s)
-    
-
-# quesA2a()
-quesA2b()
-# quesA2C(M1,'R','Y','G')
-
-
-walls = {
+walls2 = {
     (0, 0): {(1, 0): True},
     (0, 1): {(1, 1): True},
     (0, 2): {(1, 2): True},
@@ -759,7 +703,7 @@ walls = {
     (7, 9): {(8, 0): True},
 }
 
-depots = {
+depots2 = {
     'Y': (0, 1),
     'R': (0, 9),
     'W': (3, 6),
@@ -770,15 +714,126 @@ depots = {
     'P': (9, 0)
 }
 
-M2 = Map(10, 10, walls, depots)
 
-mdp = MDP(M2)
+# Flow of program: Map created -> destination set -> MDP called -> Value iteration solves MDP -> calls T() and R() in between and makes State class instances
+M1 = Map(5, 5, walls1, depots1)
+M2 = Map(10, 10, walls2, depots2)
+
+def quesA2a():
+    mdp = MDP(M1)
+    _,n = mdp.valueIteration(0.1,0.9)
+    # V.printVal()
+    print('\nEPSILON',0.1,'NO OF ITERATIONS:',n )
+
+def quesA2b():
+    mdp = MDP(M1)
+    e = 0.1
+    rng = [0.01, 0.1, 0.5, 0.8,0.99]
+    x,y = [],[]
+    for gamma in rng:
+        _,n = mdp.valueIteration(e,gamma)
+        print('\nGAMMA',gamma,'NO OF ITERATIONS:',n )
+        y.append((1-gamma)*e/gamma)
+        x.append(n)
+    print(x,y)
+    plt.figure(figsize=(10,5))
+    plt.plot(x,y, "r", linewidth = 2, marker = 'o', markerfacecolor = "r", label = "Max-norm dist")
+    plt.grid(True, color = "k")
+    plt.title('No of iterations VS Max-norm dist')
+    plt.ylabel('Max-norm dist')
+    plt.xlabel('No of iterations')
+    plt.savefig("QA2b.png")
+
+    plt.show()
+
+def quesA2C(M:Map,taxi,passenger,dest):
+    s = State(M.depots[taxi],M.depots[passenger],False,dest)
+    mdp = MDP(M)
+
+    def perform(gamma,s):
+
+        print('[Gamma =',gamma,']\n')
+        print('EVALUATING(Value iteration)')
+        P,_ = mdp.valueIteration(0.1,gamma)
+        i = 0
+
+        print('SIMULATING')
+        while(i<20 and not s.isTerminal()):
+            print('STATE: [',s.taxiPos,s.passengerPos,s.picked,s.dest, ']')
+            a = P.getVal(s)
+            print('ACTION: [',a,']\n')
+            s1,r =  s.getNext(a)
+
+            s = s1
+            i += 1
+
+        print('-----------------SIMUALTION ENDED ------------------\n\n')
+    perform(0.1,s)
+    perform(0.99,s)
+
+def quesB2():
+    global n
+    rl = RL(M1)
+
+    algos = {
+    rl.Qlearning_E: 'QLearning_e-greedy',
+    rl.Qlearning_D: 'QLearning_exploration-decay',
+    rl.SARSA_E : 'SARSA_e-greedy',
+    rl.SARSA_D: 'SARSA_exploration-decay'
+    }
+
+    for algo in algos:
+        
+        rewards = []
+        episodes = []
+
+        n = 0
+        for i in range(10):
+
+            print('[LEARNING',algos[algo],' with N = ',n,']')
+            P = algo(0.1) 
+            episodes.append(n)
+            n += 3000
+
+            avg = 0
+            for ep in range(10):
+                s = rl.getRandomState()
+                reward = 0
+                step = 0
+                while(step < 500 and not s.isTerminal()):
+                    s1,r = s.getNext(P.getVal(s))
+                    reward += r*pow(0.99,step)
+                    s = s1
+                    step += 1
+                avg += reward
+            avg = avg/10
+            rewards.append(avg)
+
+        figure,plot = plt.subplots()
+        plot.plot(episodes,rewards, "c", markerfacecolor = "c")
+        plot.grid(True, color = "k")
+        plot.set_title(algos[algo])
+        plot.set_ylabel('Discounted Reward')
+        plot.set_xlabel('No of episodes')
+        figure.canvas.set_window_title(algos[algo])
+        figure.savefig('QB2_' + algos[algo]+".png")
+    plt.show()
+
+# quesA2a()
+# quesA2b()
+# quesA2C(M1,'R','Y','G')
+quesB2()
+
+# mdp = MDP(M1)
+# mdp = MDP(M2)
 # mdp.valueIteration(0.1)
 # mdp.policyIteration(0.1)
 # mdp.policyIteration_l()
 
+# rl = RL(M1)
 # rl = RL(M2)
 # rl.Qlearning_E(0.1)
 # rl.Qlearning_D(0.1)
-# rl.SARSA_E(0.1)
+# a = rl.SARSA_E(0.1)
+# a.printVal()
 # rl.SARSA_D(0.1)
