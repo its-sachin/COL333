@@ -86,10 +86,10 @@ class State:
         if(a == 'DROP'):
             if(self.picked):
                 neigh.append(
-                    State(self.taxiPos, self.taxiPos,False, self.dest))
+                    State(self.taxiPos, self.taxiPos, False, self.dest))
             else:
                 neigh.append(
-                    State(self.taxiPos, self.passengerPos,self.picked, self.dest))
+                    State(self.taxiPos, self.passengerPos, self.picked, self.dest))
 
         elif(a == 'PICK'):
             if((not self.picked) and self.taxiPos == self.passengerPos):
@@ -97,7 +97,7 @@ class State:
                     State(self.taxiPos, self.taxiPos, True, self.dest))
             else:
                 neigh.append(
-                    State(self.taxiPos, self.passengerPos,self.picked, self.dest))
+                    State(self.taxiPos, self.passengerPos, self.picked, self.dest))
         else:
 
             for direc in range(2):
@@ -108,7 +108,7 @@ class State:
                     if(self.picked):
                         pos2 = pos
                     neigh.append(
-                        State(pos, pos2,self.picked, self.dest))
+                        State(pos, pos2, self.picked, self.dest))
 
         return neigh
 
@@ -117,7 +117,7 @@ class State:
 
         if(a == 'DROP' or a == 'PICK'):
             s1 = self.getNeighbours(a)[0]
-            return s1,self.R(a,s1)
+            return s1, self.R(a, s1)
         else:
 
             direc = {
@@ -128,32 +128,33 @@ class State:
             }
 
             for i in direc:
-                direc[i] = (self.taxiPos[0]+direc[i][0], self.taxiPos[1]+direc[i][1])
+                direc[i] = (self.taxiPos[0]+direc[i][0],
+                            self.taxiPos[1]+direc[i][1])
 
-            prob = random.uniform(0,1)
+            prob = random.uniform(0, 1)
             if(prob <= 0.85):
                 if(self.picked):
-                    s1 = State(direc[a],direc[a],True,self.dest)
+                    s1 = State(direc[a], direc[a], True, self.dest)
                 else:
-                    s1 = State(direc[a],self.passengerPos,False,self.dest)
+                    s1 = State(direc[a], self.passengerPos, False, self.dest)
 
                 if(self.isValidTransition(s1)):
-                    return s1,-1
-                return self,-1
+                    return s1, -1
+                return self, -1
 
             else:
                 i = a
-                action = ['N','S','E','W']
-                while(i==a):
-                    i = action[random.randint(0,3)]
+                action = ['N', 'S', 'E', 'W']
+                while(i == a):
+                    i = action[random.randint(0, 3)]
 
                 if(self.picked):
-                    s1 = State(direc[a],direc[a],True,self.dest)
+                    s1 = State(direc[a], direc[a], True, self.dest)
                 else:
-                    s1 = State(direc[a],self.passengerPos,False,self.dest)
+                    s1 = State(direc[a], self.passengerPos, False, self.dest)
                 if(self.isValidTransition(s1)):
-                    return s1,-1
-                return self,-1
+                    return s1, -1
+                return self, -1
 
     # Checks if state is terminal or not
     def isTerminal(self):
@@ -164,56 +165,58 @@ class State:
 
 
 class Table:
-    
-    def __init__(self,map:Map,mode):
+
+    def __init__(self, map: Map, mode):
 
         # table[x1][y1][d][p][x2][y2]
         self.mode = mode
         self.map = map
         if(mode == 'Q'):
             self.table = [[[[[[[0 for a in range(6)]for k in range(len(self.map.depots))] for p in range(2)] for l in range(self.map.height)]
-                                for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
+                            for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
         else:
             if(mode == 'VALUE'):
                 val = 0
             elif(mode == 'POLICY'):
                 val = 'N'
-            
+
             self.table = [[[[[[val for k in range(len(self.map.depots))] for p in range(2)] for l in range(self.map.height)]
                             for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
 
-    def getVal(self, s: State, a = None):
+    def getVal(self, s: State, a=None):
         p = 0
         if(s.picked):
             p = 1
         if(self.mode == 'Q'):
             return self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]][s.passengerPos[1]][p][self.map.dtoi(s.dest)][a]
         return self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]][s.passengerPos[1]][p][self.map.dtoi(s.dest)]
-        
-    def setVal(self, s: State, val, a = None):
+
+    def setVal(self, s: State, val, a=None):
         p = 0
         if(s.picked):
             p = 1
         if(self.mode == 'Q'):
-            self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]][s.passengerPos[1]][p][self.map.dtoi(s.dest)][a] = val
+            self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]
+                                                   ][s.passengerPos[1]][p][self.map.dtoi(s.dest)][a] = val
         else:
-            self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]][s.passengerPos[1]][p][self.map.dtoi(s.dest)] = val
+            self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]
+                                                   ][s.passengerPos[1]][p][self.map.dtoi(s.dest)] = val
 
     def printVal(self):
 
-        actions = ['N', 'S', 'W', 'E','PICK', 'DROP']
+        actions = ['N', 'S', 'W', 'E', 'PICK', 'DROP']
 
         for p in range(2):
             for d in range(len(self.map.depots)):
-                if(p==1):
-                    print('\nDEST: ', self.map.itod(d), 'Picked : ',p==1)
+                if(p == 1):
+                    print('\nDEST: ', self.map.itod(d), 'Picked : ', p == 1)
                     for y in range(self.map.height-1, -1, -1):
                         for x in range(self.map.width):
                             val = self.table[x][y][x][y][p][d]
                             if(self.mode == 'Q'):
                                 val = actions[val.index(max(val))]
                             elif(self.mode == 'VALUE'):
-                                val = '{0:.2f}'.format(val)                                
+                                val = '{0:.2f}'.format(val)
                             print(val, end=', ')
                         print()
 
@@ -221,7 +224,8 @@ class Table:
 
                     for i in range(self.map.width):
                         for j in range(self.map.height):
-                            print('\nPassenger: ', (i,j), 'DEST: ', self.map.itod(d), 'Picked : ',p==1)
+                            print('\nPassenger: ', (i, j), 'DEST: ',
+                                  self.map.itod(d), 'Picked : ', p == 1)
                             for y in range(self.map.height-1, -1, -1):
                                 for x in range(self.map.width):
                                     val = self.table[x][y][i][j][p][d]
@@ -231,8 +235,7 @@ class Table:
                                         val = '{0:.2f}'.format(val)
                                     print(val, end=', ')
                                 print()
-            
-       
+
 
 class MDP:
     def __init__(self, m: Map):
@@ -274,8 +277,8 @@ class MDP:
     # TODO: have to add max-norm using epsilon
     def valueIteration(self, e):
 
-        V = Table(self.map,'VALUE')
-        P = Table(self.map,'POLICY')
+        V = Table(self.map, 'VALUE')
+        P = Table(self.map, 'POLICY')
 
         gamma = 0.99
         delta = 5
@@ -304,9 +307,9 @@ class MDP:
             if(maxx != None):
                 # print(V[x1][y1][x2][y2][p][d],maxx[0])
                 change = abs(maxx[0] - V.getVal(s))
-                V.setVal(s,maxx[0])
-                P.setVal(s,maxx[1])
-                delta = max(change,delta)
+                V.setVal(s, maxx[0])
+                P.setVal(s, maxx[1])
+                delta = max(change, delta)
                 # print('LOL',P[x1][y1][x2][y2][p][d])
             return delta
 
@@ -338,10 +341,8 @@ class MDP:
         P.printVal()
 
     def policyIteration(self, e):
-        V = [[[[[[0 for k in range(len(self.map.depots))] for p in range(2)] for l in range(self.map.height)]
-               for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
-        P = [[[[[['N' for k in range(len(self.map.depots))] for p in range(2)] for l in range(self.map.height)]
-               for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
+        V = Table(self.map, 'VALUE')
+        P = Table(self.map, 'POLICY')
 
         gamma = 0.99
         delta = 5
@@ -355,7 +356,7 @@ class MDP:
             if(s.picked):
                 p = 1
             d = self.map.dtoi(s.dest)
-            a = P[x1][y1][x2][y2][p][d]
+            a = P.getVal(s)
             neigh = s.getNeighbours(a)
             # print(a,len(neigh))
             if(len(neigh) > 0):
@@ -368,10 +369,9 @@ class MDP:
                         if(s1.picked):
                             l = 1
                         # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)])
-                        curr += t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]]
-                                   [s1.passengerPos[0]][s1.passengerPos[1]][l][self.map.dtoi(s1.dest)])
-                change = abs(curr - V[x1][y1][x2][y2][p][d])
-                V[x1][y1][x2][y2][p][d] = curr
+                        curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
+                change = abs(curr - V.getVal(s))
+                V.setVal(s, curr)
                 if(change > delta):
                     delta = change
             return delta
@@ -399,16 +399,15 @@ class MDP:
                             if(s1.picked):
                                 l = 1
                             # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)])
-                            curr += t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]]
-                                       [s1.passengerPos[0]][s1.passengerPos[1]][l][self.map.dtoi(s1.dest)])
+                            curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
                     # print('----CURR: ' ,curr)
 
                     if(maxx == None or maxx[0] < curr):
                         maxx = [curr, a]
 
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
-            if(maxx != None and maxx[1] != P[x1][y1][x2][y2][p][d]):
-                P[x1][y1][x2][y2][p][d] = maxx[1]
+            if(maxx != None and maxx[1] != P.getVal(s)):
+                P.setVal(s, maxx[1])
                 boolV = True
             return boolV
         while flag:
@@ -460,36 +459,14 @@ class MDP:
                                             flag = True
             i += 1
             print('Iteration', i, end='\r')
-        for p in range(2):
-            for d in range(len(self.map.depots)):
-                if(p == 1):
-                    print('\nDEST: ', self.map.itod(d), 'Picked : ', p == 1)
-                    for y in range(self.map.height-1, -1, -1):
-                        for x in range(self.map.width):
-                            # print(['{0:.2f}'.format(i) for i in V[y][x][p][d]],end = ', ')
-                            print(P[x][y][x][y][p][d], end=', ')
-                        print()
-
-                else:
-
-                    for i in range(self.map.width):
-                        for j in range(self.map.height):
-                            print('\nPassenger: ', (i, j), 'DEST: ',
-                                  self.map.itod(d), 'Picked : ', p == 1)
-                            for y in range(self.map.height-1, -1, -1):
-                                for x in range(self.map.width):
-                                    # print(['{0:.2f}'.format(i) for i in V[y][x][p][d]],end = ', ')
-                                    print(P[x][y][i][j][p][d], end=', ')
-                                print()
+        P.printVal()
 
     def policyIteration_l(self):
         w = self.map.width
         h = self.map.height
         de = len(self.map.depots)
-        V = [[[[[[0 for k in range(len(self.map.depots))] for p in range(2)] for l in range(self.map.height)]
-               for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
-        P = [[[[[['N' for k in range(len(self.map.depots))] for p in range(2)] for l in range(self.map.height)]
-               for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
+        V = Table(self.map, 'VALUE')
+        P = Table(self.map, 'POLICY')
         changed = True
         i = 0
         gamma = 0.99
@@ -517,16 +494,15 @@ class MDP:
                             if(s1.picked):
                                 l = 1
                             # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)])
-                            curr += t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]]
-                                       [s1.passengerPos[0]][s1.passengerPos[1]][l][self.map.dtoi(s1.dest)])
+                            curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
                     # print('----CURR: ' ,curr)
 
                     if(maxx == None or maxx[0] < curr):
                         maxx = [curr, a]
 
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
-            if(maxx != None and maxx[1] != P[x1][y1][x2][y2][p][d]):
-                P[x1][y1][x2][y2][p][d] = maxx[1]
+            if(maxx != None and maxx[1] != P.getVal(s)):
+                P.setVal(s, maxx[1])
                 boolV = True
             return boolV
         while changed:
@@ -538,7 +514,7 @@ class MDP:
                     for d in range(len(self.map.depots)):
                         s = State((x1, y1), (x1, y1),
                                   True, self.map.itod(d))
-                        a = P[x1][y1][x1][y1][1][d]
+                        a = P.getVal(s)
                         temp = [0 for i in range(w*h*w*h*de+w*h*de)]
                         neigh = s.getNeighbours(a)
                         temp[x1*h*de+y1*de+d] = 1
@@ -550,7 +526,7 @@ class MDP:
                                     l = 0
                                     if(s1.picked):
                                         l = 1
-                                    r += t*self.R(s, a, s1)
+                                    r += t*s.R(a, s1)
                                     if (l == 1):
                                         temp[s1.taxiPos[0]*h*de+s1.taxiPos[1] *
                                              de+self.map.dtoi(s1.dest)] = -1*gamma*t
@@ -581,7 +557,7 @@ class MDP:
                                             l = 0
                                             if(s1.picked):
                                                 l = 1
-                                            r += t*self.R(s, a, s1)
+                                            r += t*s.R(a, s1)
                                             if (l == 1):
                                                 temp[s1.taxiPos[0]*h*de+s1.taxiPos[1] *
                                                      de+self.map.dtoi(s1.dest)] = -1*gamma*t
@@ -597,14 +573,17 @@ class MDP:
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for d in range(len(self.map.depots)):
-                        V[x1][y1][x1][y1][1][d] = ans[x1*h*de+y1*de+d]
+                        s = State((x1, y1), (x1, y1), True, self.map.itod(d))
+                        V.setVal(s, ans[x1*h*de+y1*de+d])
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for x2 in range(self.map.width):
                         for y2 in range(self.map.height):
                             for d in range(len(self.map.depots)):
-                                V[x1][y1][x2][y2][0][d] = ans[w*h*de +
-                                                              x1*h*w*h*de+y1*w*h*de+x2*h*de+y2*de+d]
+                                s = State((x1, y1), (x2, y2),
+                                          False, self.map.itod(d))
+                                V.setVal(
+                                    s, ans[w*h*de + x1*h*w*h*de+y1*w*h*de+x2*h*de+y2*de+d])
 
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
@@ -629,27 +608,7 @@ class MDP:
                                             changed = True
             i += 1
             print('Iteration', i, end='\r')
-        for p in range(2):
-            for d in range(len(self.map.depots)):
-                if(p == 1):
-                    print('\nDEST: ', self.map.itod(d), 'Picked : ', p == 1)
-                    for y in range(self.map.height-1, -1, -1):
-                        for x in range(self.map.width):
-                            # print(['{0:.2f}'.format(i) for i in V[y][x][p][d]],end = ', ')
-                            print(P[x][y][x][y][p][d], end=', ')
-                        print()
-
-                else:
-
-                    for i in range(self.map.width):
-                        for j in range(self.map.height):
-                            print('\nPassenger: ', (i, j), 'DEST: ',
-                                  self.map.itod(d), 'Picked : ', p == 1)
-                            for y in range(self.map.height-1, -1, -1):
-                                for x in range(self.map.width):
-                                    # print(['{0:.2f}'.format(i) for i in V[y][x][p][d]],end = ', ')
-                                    print(P[x][y][i][j][p][d], end=', ')
-                                print()
+        P.printVal()
 
 
 # Change this value for number of episodes in learning
@@ -663,9 +622,9 @@ class RL:
         State.map = map
 
     # Generalised learning that can perform any learning specified in question (by changing parameters)
-    def generalLearning(self, e, numEpisode , isE_Greedy, isQ):
-    
-        Q = Table(self.map,'Q')
+    def generalLearning(self, e, numEpisode, isE_Greedy, isQ):
+
+        Q = Table(self.map, 'Q')
 
         alpha = 0.1
         gamma = 0.9
@@ -718,8 +677,9 @@ class RL:
             while(not s.isTerminal()):
                 a = policy(s, e, it)
                 s1, r = s.getNext(actions[a])
-                val = (1-alpha)*Q.getVal(s,a) + alpha*(r + gamma*Q.getVal(s1, getBest(s1)))
-                Q.setVal(s,val,a)
+                val = (1-alpha)*Q.getVal(s, a) + alpha * \
+                    (r + gamma*Q.getVal(s1, getBest(s1)))
+                Q.setVal(s, val, a)
                 # print(s.taxiPos,s.passengerPos,s.picked,s.dest,'[Action: ',actions[a],']->',s1.taxiPos,s1.passengerPos,s1.picked,s1.dest,'[Reward',r,']')
                 s = s1
 
@@ -729,7 +689,8 @@ class RL:
             while(not s.isTerminal()):
                 s1, r = s.getNext(actions[a])
                 a1 = policy(s1, e, it)
-                val = (1-alpha)*Q.getVal(s, a) + alpha*(r + gamma*Q.getVal(s1, a1))
+                val = (1-alpha)*Q.getVal(s, a) + alpha * \
+                    (r + gamma*Q.getVal(s1, a1))
                 Q.setVal(s, val, a)
                 s = s1
                 a = a1
@@ -793,8 +754,8 @@ M1 = Map(5, 5, walls, depots)
 M1.setDest()
 
 mdp = MDP(M1)
-mdp.valueIteration(0.1)
-# mdp.policyIteration(0.1)
+# mdp.valueIteration(0.1)
+mdp.policyIteration(0.1)
 # mdp.policyIteration_l()
 
 # rl = RL(M1)
