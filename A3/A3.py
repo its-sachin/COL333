@@ -346,6 +346,7 @@ class MDP:
         gamma = 0.99
         delta = 5
         i = 0
+        flag = True
 
         def update(s, delta):
             x1, y1 = s.taxiPos
@@ -376,7 +377,7 @@ class MDP:
             return delta
 
         def updateP(s):
-            flag = False
+            boolV = False
             x1, y1 = s.taxiPos
             x2, y2 = s.passengerPos
             p = 0
@@ -408,12 +409,12 @@ class MDP:
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None and maxx[1] != P[x1][y1][x2][y2][p][d]):
                 P[x1][y1][x2][y2][p][d] = maxx[1]
-                flag = True
-            return flag
-        flag = True
+                boolV = True
+            return boolV
         while flag:
             # policy evaluation phase
             flag = False
+            delta = 5
             while delta >= (1-gamma)*e/gamma:
 
                 delta = 0
@@ -494,7 +495,7 @@ class MDP:
         gamma = 0.99
 
         def updateP(s):
-            flag = False
+            boolV = False
             x1, y1 = s.taxiPos
             x2, y2 = s.passengerPos
             p = 0
@@ -526,27 +527,52 @@ class MDP:
             # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None and maxx[1] != P[x1][y1][x2][y2][p][d]):
                 P[x1][y1][x2][y2][p][d] = maxx[1]
-                flag = True
-            return flag
+                boolV = True
+            return boolV
         while changed:
             matrix = []
             const = []
             changed = False
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
-                    for p in range(2):
-                        for d in range(len(self.map.depots)):
-
-                            picked = (p == 1)
-
-                            if(picked):
-                                s = State((x1, y1), (x1, y1),
-                                          picked, self.map.itod(d))
-                                a = P[x1][y1][x1][x2][p][d]
-                                temp = [0 for i in range(w*h*w*h*de*2)]
+                    for d in range(len(self.map.depots)):
+                        s = State((x1, y1), (x1, y1),
+                                  True, self.map.itod(d))
+                        a = P[x1][y1][x1][y1][1][d]
+                        temp = [0 for i in range(w*h*w*h*de+w*h*de)]
+                        neigh = s.getNeighbours(a)
+                        temp[x1*h*de+y1*de+d] = 1
+                        if (len(neigh) > 0):
+                            r = 0
+                            for s1 in neigh:
+                                t = self.T(s, a, s1)
+                                if (t != 0):
+                                    l = 0
+                                    if(s1.picked):
+                                        l = 1
+                                    r += t*self.R(s, a, s1)
+                                    if (l == 1):
+                                        temp[s1.taxiPos[0]*h*de+s1.taxiPos[1] *
+                                             de+self.map.dtoi(s1.dest)] = -1*gamma*t
+                                    else:
+                                        temp[w*h*de+s1.taxiPos[0]*h*w*h*de+s1.taxiPos[1]*w*h*de+s1.passengerPos[0] *
+                                             h*de+s1.passengerPos[1]*de+self.map.dtoi(s1.dest)] = -1*gamma*t
+                            const.append(r)
+                        else:
+                            const.append(0)
+                        matrix.append(temp)
+            for x1 in range(self.map.width):
+                for y1 in range(self.map.height):
+                    for x2 in range(self.map.width):
+                        for y2 in range(self.map.height):
+                            for d in range(len(self.map.depots)):
+                                s = State((x1, y1), (x2, y2),
+                                          False, self.map.itod(d))
+                                a = P[x1][y1][x2][y2][0][d]
+                                temp = [0 for i in range(w*h*w*h*de+w*h*de)]
                                 neigh = s.getNeighbours(a)
-                                temp[x1*h*w*h*2*de+y1*w*h*2*de +
-                                     x1*h*2*de+y1*2*de+p*de+d] = 1
+                                temp[w*h*de + x1*h*w*h*de+y1 *
+                                     w*h*de+x2*h*de+y2*de+d] = 1
                                 if (len(neigh) > 0):
                                     r = 0
                                     for s1 in neigh:
@@ -556,53 +582,30 @@ class MDP:
                                             if(s1.picked):
                                                 l = 1
                                             r += t*self.R(s, a, s1)
-                                            temp[s1.taxiPos[0]*h*w*h*2*de+s1.taxiPos[1]*w*h*2*de+s1.passengerPos[0] *
-                                                 h*2*de+s1.passengerPos[1]*2*de+l*de+self.map.dtoi(s1.dest)] = -1*gamma*t
+                                            if (l == 1):
+                                                temp[s1.taxiPos[0]*h*de+s1.taxiPos[1] *
+                                                     de+self.map.dtoi(s1.dest)] = -1*gamma*t
+                                            else:
+                                                temp[w*h*de+s1.taxiPos[0]*h*w*h*de+s1.taxiPos[1]*w*h*de+s1.passengerPos[0] *
+                                                     h*de+s1.passengerPos[1]*de+self.map.dtoi(s1.dest)] = -1*gamma*t
                                     const.append(r)
                                 else:
                                     const.append(0)
                                 matrix.append(temp)
-                            else:
-                                for x2 in range(self.map.width):
-                                    for y2 in range(self.map.height):
-                                        a = P[x1][y1][x2][y2][p][d]
-                                        s = State((x1, y1), (x2, y2),
-                                                  picked, self.map.itod(d))
-                                        temp = [0 for i in range(w*h*w*h*de*2)]
-                                        neigh = s.getNeighbours(a)
-                                        temp[x1*h*w*h*2*de+y1*w*h*2*de +
-                                             x2*h*2*de+y2*2*de+p*de+d] = 1
-                                        if (len(neigh) > 0):
-                                            r = 0
-                                            for s1 in neigh:
-                                                t = self.T(s, a, s1)
-                                                if (t != 0):
-                                                    l = 0
-                                                    if(s1.picked):
-                                                        l = 1
-                                                    r += t*self.R(s, a, s1)
-                                                    temp[s1.taxiPos[0]*h*w*h*2*de+s1.taxiPos[1]*w*h*2*de+s1.passengerPos[0] *
-                                                         h*2*de+s1.passengerPos[1]*2*de+l*de+self.map.dtoi(s1.dest)] = -1*gamma*t
-                                            const.append(r)
-                                        else:
-                                            const.append(0)
-                                        matrix.append(temp)
-            print(shape(np.array(matrix)), shape(np.array(const)))
+            # print(matrix)
             ans = np.linalg.solve(np.array(matrix), np.array(const))
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
-                    for p in range(2):
-                        for d in range(len(self.map.depots)):
+                    for d in range(len(self.map.depots)):
+                        V[x1][y1][x1][y1][1][d] = ans[x1*h*de+y1*de+d]
+            for x1 in range(self.map.width):
+                for y1 in range(self.map.height):
+                    for x2 in range(self.map.width):
+                        for y2 in range(self.map.height):
+                            for d in range(len(self.map.depots)):
+                                V[x1][y1][x2][y2][0][d] = ans[w*h*de +
+                                                              x1*h*w*h*de+y1*w*h*de+x2*h*de+y2*de+d]
 
-                            picked = (p == 1)
-                            if(picked):
-                                V[x1][y1][x1][y1][picked][d] = ans[x1*h*w*h *
-                                                                   2*de+y1*w*h*2*de + x1*h*2*de+y1*2*de+p*de+d]
-                            else:
-                                for x2 in range(self.map.width):
-                                    for y2 in range(self.map.height):
-                                        V[x1][y1][x2][y2][picked][d] = ans[x1*h*w*h *
-                                                                           2*de+y1*w*h*2*de + x2*h*2*de+y2*2*de+p*de+d]
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for p in range(2):
