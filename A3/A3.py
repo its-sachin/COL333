@@ -2,6 +2,7 @@ from math import degrees
 import random
 import numpy as np
 from numpy.core.fromnumeric import shape
+from matplotlib import pyplot as plt
 
 
 class Map:
@@ -80,8 +81,8 @@ class State:
     def getNeighbours(self, a):
         neigh = []
 
-        if(self.isTerminal()):
-            return neigh
+        # if(self.isTerminal()):
+        #     return neigh
 
         if(a == 'DROP'):
             if(self.picked):
@@ -325,7 +326,7 @@ class MDP:
         P = Table(self.map, 'POLICY')
 
         delta = 5
-        i = 0
+        i = 1
 
         def update(s, delta):
 
@@ -349,7 +350,8 @@ class MDP:
             i += 1
             print('Iteration', i, delta, end='\r')
 
-        P.printVal()
+        # P.printVal()
+        return P,i
 
     def policyIteration(self, e, gamma=0.99):
         V = Table(self.map, 'VALUE')
@@ -655,14 +657,43 @@ M1 = Map(5, 5, walls, depots)
 
 mdp = MDP(M1)
 # mdp.valueIteration(0.1)
-# mdp.policyIteration(0.1)
-mdp.policyIteration_l()
+mdp.policyIteration(0.1)
+# mdp.policyIteration_l()
 
-# rl = RL(M1)
+# rl = RL(M2)
 # rl.Qlearning_E(0.1)
 # rl.Qlearning_D(0.1)
 # rl.SARSA_E(0.1)
 # rl.SARSA_D(0.1)
+
+def quesA2a():
+    mdp = MDP(M1)
+    V,n = mdp.valueIteration(0.1,0.99)
+    # V.printVal()
+    print('\nEPSILON',0.1,'NO OF ITERATIONS:',n )
+
+def quesA2b():
+    mdp = MDP(M1)
+    e = 0.1
+    rng = [0.01, 0.1, 0.5, 0.8,0.99]
+    x,y = [],[]
+    for gamma in rng:
+        V,n = mdp.valueIteration(e,gamma)
+        print('\nGAMMA',gamma,'NO OF ITERATIONS:',n )
+        x.append((1-gamma)*e/gamma)
+        y.append(n)
+    print(x,y)
+    plt.figure(figsize=(15,5))
+    plt.plot(x,y, "r", linewidth = 2, marker = 'o', markerfacecolor = "r", label = "Max-norm dist")
+    plt.grid(True, color = "k")
+    plt.title('Max-norm dist VS No of iterations ')
+    plt.ylabel('Max-norm dist')
+    plt.xlabel('No of iterations')
+    plt.show()
+
+
+# quesA2a()
+# quesA2b()
 
 
 walls = {
@@ -708,9 +739,9 @@ depots = {
     'P': (9, 0)
 }
 
-# M2 = Map(10, 10, walls, depots)
+M2 = Map(10, 10, walls, depots)
 
-# mdp = MDP(M2)
+mdp = MDP(M2)
 # mdp.valueIteration(0.1)
 # mdp.policyIteration(0.1)
 # mdp.policyIteration_l()
