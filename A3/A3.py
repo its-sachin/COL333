@@ -32,17 +32,7 @@ class Map:
     # depot to integer (Useful for array indexing)
     def dtoi(self, d):
         return self.dests.index(d)
-
-    # Sets random destination out of depots
-    def setDest(self):
-        i = random.randint(1, len(self.depots))
-        self.dest = self.itod(i-1)
-
-        while True:
-            j = random.randint(1, 4)
-            if(j != i):
-                self.start = self.itod(i-1)
-                break
+        
 
 
 class State:
@@ -108,8 +98,10 @@ class State:
                     pos2 = self.passengerPos
                     if(self.picked):
                         pos2 = pos
-                    neigh.append(
-                        State(pos, pos2, self.picked, self.dest))
+                    s1 = State(pos, pos2, self.picked, self.dest)
+                    if(self.isValidTransition(s1)):
+                        neigh.append(s1)
+            neigh.append(State(self.taxiPos, self.passengerPos, self.picked, self.dest))
 
         return neigh
 
@@ -138,7 +130,7 @@ class State:
                     s1 = State(direc[a], direc[a], True, self.dest)
                 else:
                     s1 = State(direc[a], self.passengerPos, False, self.dest)
-
+                # print(s1.taxiPos,s1.passengerPos,s1.picked)
                 if(self.isValidTransition(s1)):
                     return s1, -1
                 return self, -1
@@ -273,13 +265,26 @@ class MDP:
             for i in direc:
                 direc[i] = (s.taxiPos[0]+direc[i][0], s.taxiPos[1]+direc[i][1])
 
-            for i in direc:
-                # print(i,s.taxiPos,'->',s1.taxiPos,direc[i],s.isValidTransition(s1),s1.taxiPos[0] == direc[i][0] and s1.taxiPos[1]==direc[i][1])
-                if(s1.taxiPos == direc[i] and s.isValidTransition(s1)):
-                    if(a == i):
-                        return 0.85
-                    else:
-                        return 0.05
+            if(s.taxiPos == s1.taxiPos):
+                p = 0
+                for i in direc:
+                    s2 = State(direc[i],direc[i],True,s.dest)
+                    if(not s.isValidTransition(s2)):
+                        # print('lol',s.taxiPos,direc[i],i,a)
+                        if(a == i):
+                            p += 0.85
+                        else:
+                            p += 0.05
+                return p
+            else:
+
+                for i in direc:
+                    # print(i,s.taxiPos,'->',s1.taxiPos,direc[i],s.isValidTransition(s1),s1.taxiPos[0] == direc[i][0] and s1.taxiPos[1]==direc[i][1])
+                    if(s1.taxiPos == direc[i] and s.isValidTransition(s1)):
+                        if(a == i):
+                            return 0.85
+                        else:
+                            return 0.05
 
         return 0
 
@@ -294,7 +299,7 @@ class MDP:
                 for s1 in neigh:
                     t = self.T(s, a, s1)
                     if(t > 0):
-                        # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(s.R(a, s1) + gamma*V.getVal(s1))
+                        # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, s.R(a, s1),t, t*(s.R(a, s1) + gamma*V.getVal(s1)))
                         curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
                 # print('----CURR: ' ,curr)
 
@@ -331,12 +336,16 @@ class MDP:
 
     # Performs value iteration
     # TODO: have to add max-norm using epsilon
+<<<<<<< HEAD
     def valueIteration(self, e, gamma=0.99):
+=======
+    def valueIteration(self, e, gamma = 0.9):
+>>>>>>> 9de8c242697ded79f4246c52c82ea5a92cbbb951
 
         V = Table(self.map, 'VALUE')
         P = Table(self.map, 'POLICY')
 
-        delta = 5
+        delta = 10
         i = 0
 
         def update(s, delta):
@@ -359,17 +368,17 @@ class MDP:
 
             delta = self.iterate(update)[0]
             i += 1
-            print('Iteration', i, delta, end='\r')
+            # print('Iteration', i, delta, end='\r')
 
         # P.printVal()
         return P, i
 
-    def policyIteration(self, e, gamma=0.99):
+    def policyIteration(self, e, gamma=0.9):
         V = Table(self.map, 'VALUE')
         P = Table(self.map, 'POLICY')
         global policyE
 
-        delta = 5
+        delta = 10
         i = 0
         flag = True
 
@@ -406,7 +415,7 @@ class MDP:
 
             # policy evaluation phase
             flag = False
-            delta = 5
+            delta = 10
             while delta >= (1-gamma)*e/gamma:
                 delta = self.iterate(update)[0]
             policyE.append(V.summ())
@@ -680,7 +689,11 @@ mdp = MDP(M1)
 
 def quesA2a():
     mdp = MDP(M1)
+<<<<<<< HEAD
     V, n = mdp.valueIteration(0.1, 0.99)
+=======
+    _,n = mdp.valueIteration(0.1,0.9)
+>>>>>>> 9de8c242697ded79f4246c52c82ea5a92cbbb951
     # V.printVal()
     print('\nEPSILON', 0.1, 'NO OF ITERATIONS:', n)
 
@@ -691,6 +704,7 @@ def quesA2b():
     rng = [0.01, 0.1, 0.5, 0.8, 0.99]
     x, y = [], []
     for gamma in rng:
+<<<<<<< HEAD
         V, n = mdp.valueIteration(e, gamma)
         print('\nGAMMA', gamma, 'NO OF ITERATIONS:', n)
         y.append((1-gamma)*e/gamma)
@@ -700,10 +714,46 @@ def quesA2b():
              markerfacecolor="r", label="Max-norm dist")
     plt.grid(True, color="k")
     plt.title('Max-norm dist VS No of iterations ')
+=======
+        _,n = mdp.valueIteration(e,gamma)
+        print('\nGAMMA',gamma,'NO OF ITERATIONS:',n )
+        y.append((1-gamma)*e/gamma)
+        x.append(n)
+    print(x,y)
+    plt.figure(figsize=(10,5))
+    plt.plot(x,y, "r", linewidth = 2, marker = 'o', markerfacecolor = "r", label = "Max-norm dist")
+    plt.grid(True, color = "k")
+    plt.title('No of iterations VS Max-norm dist')
+>>>>>>> 9de8c242697ded79f4246c52c82ea5a92cbbb951
     plt.ylabel('Max-norm dist')
     plt.xlabel('No of iterations')
     plt.show()
 
+def quesA2C(M:Map,taxi,passenger,dest):
+    s = State(M.depots[taxi],M.depots[passenger],False,dest)
+    mdp = MDP(M)
+
+    def perform(gamma,s):
+
+        print('[Gamma =',gamma,']\n')
+        print('EVALUATING(Value iteration)')
+        P,_ = mdp.valueIteration(0.1,gamma)
+        i = 0
+
+        print('SIMULATING')
+        while(i<20 and not s.isTerminal()):
+            print('STATE: [',s.taxiPos,s.passengerPos,s.picked,s.dest, ']')
+            a = P.getVal(s)
+            print('ACTION: [',a,']\n')
+            s1,r =  s.getNext(a)
+
+            s = s1
+            i += 1
+
+        print('-----------------SIMUALTION ENDED ------------------\n\n')
+    perform(0.1,s)
+    perform(0.99,s)
+    
 
 policyE = []
 
@@ -735,7 +785,12 @@ def quesA3b():
 
 
 # quesA2a()
+<<<<<<< HEAD
 quesA3b()
+=======
+quesA2b()
+# quesA2C(M1,'R','Y','G')
+>>>>>>> 9de8c242697ded79f4246c52c82ea5a92cbbb951
 
 
 walls = {
