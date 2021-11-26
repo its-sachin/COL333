@@ -99,6 +99,8 @@ The linear algebra method takes O($n^3$) time for policy evaluation, where n is 
     \begin{center}
         \begin{figure}[h]
 \hfill\includegraphics[height=6.5cm]{QA3b.png}\hspace*{\fill}
+    \caption{Policy Loss}
+    \label{fig:Policy Loss}
 \end{figure}
 \end{center}
 
@@ -131,7 +133,7 @@ Exploration techniques:-
 
 \subsection{Number of iterations VS Discounted reward:}
 In this part we needed to plot Number of iterations VS Max-norm dist graph for all the algo in part 1. For that we first find the Policy by varying number of iterations and then found 
-sum of discounted rewards for 100 random states (for better results) and then average out the reward. And then plotted the graph between number of iteration and discounted reward sum. Same is repeated for all algorithms.\\
+sum of discounted rewards for 500 random states (for better results) and then average out the reward. And then plotted the graph between number of iteration and discounted reward sum. Same is repeated for all algorithms.\\
 Following are the results:-
 
 
@@ -209,11 +211,7 @@ In this we needed to plot graph of part 3 by changing alpha and epsilon for Q le
     \end{figure}
     \end{center}
 
-    It can be seen from the graph that as $\alpha$ is increased the rate of convergence decreases (reward is low and there are large fluctuations). This is because as $\alpha$ is 
-    increased, the importance given to next state achieved is increased and importance to the past Q value that is recorded so for is decreased. Hence only nearby neighbours of any 
-    state affect it and positive rewards in far off state is not travelled (well, it is travelled but gets attenuated as constant 1-$\alpha$ is multiplied to it that decreases as $\alpha$ is increased).
-    This also explains the reason of large fluctuations, random state that is closer to terminal state will result in positive reward and correct policy but far off state will result is high negative reward.
-
+    
 \end{enumerate}
 
 
@@ -227,7 +225,21 @@ Here are the resuls of all the 4 policies:-
     \item \textbf{SARSA with exploration decay: } -8.61
 \end{itemize}
 
-Hence best algorithm is Q Learning with exploration decay.
+Hence best algorithm is Q Learning with exploration decay.\\
+
+Please note that average reward is coming out to be negative even for the best policy, this is because our map is big and shortest path from taxi's initial position to passenger's source to passenger's destination can have
+more than 20 grid cells, so there are some instances (one such instance is shown below) where even if we are lucky enough to get into to desired cell for every stochastic action then also we will get negative reward. Hence in average the net discounted reward sum is negative.
+Also as we have averaged out the result on 500 random episodes, the result is reliable and evident of the policy itself.
+
+
+\begin{center}
+    \begin{figure}[H]
+    \hfill\includegraphics[width=9cm]{instance.png}\hspace*{\fill}
+    \caption{Instance having shortest path length = 36 (best reward sum = -17.8)}
+    \label{fig: Instance having shortest path length = 36 }
+\end{figure}
+\end{center}
+
 
 \end{enumerate}
 \end{document}

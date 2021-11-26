@@ -914,7 +914,7 @@ def quesB2():
             n += 500
 
             avg = 0
-            for ep in range(100):
+            for ep in range(500):
                 s = rl.getRandomState()
                 reward = 0
                 step = 0
@@ -924,7 +924,7 @@ def quesB2():
                     s = s1
                     step += 1
                 avg += reward
-            avg = avg/100
+            avg = avg/500
             rewards.append(avg)
 
         figure, plot = plt.subplots()
@@ -934,7 +934,7 @@ def quesB2():
         plot.set_ylabel('Discounted Reward')
         plot.set_xlabel('No of episodes')
         figure.canvas.set_window_title(algos[algo])
-        # figure.savefig('QB2_' + algos[algo]+".png")
+        figure.savefig('QB2_' + algos[algo]+".png")
         print()
     plt.show()
 
@@ -977,7 +977,7 @@ def quesB4():
     colour = ['b', 'g', 'r', 'c', 'm']
     # (e,alpha)
     values = {
-        # 'alpha=0.1 varying e': [(0, 0.1), (0.05, 0.1), (0.1, 0.1), (0.5, 0.1), (0.9, 0.1)],
+        'alpha=0.1 varying e': [(0, 0.1), (0.05, 0.1), (0.1, 0.1), (0.5, 0.1), (0.9, 0.1)],
         'e=0.1 varying alpha': [(0.1, 0.1), (0.1, 0.2), (0.1, 0.3), (0.1, 0.4), (0.1, 0.5)]
     }
 
@@ -1009,7 +1009,7 @@ def quesB4():
                 n += 500
 
                 avg = 0
-                for ep in range(100):
+                for ep in range(500):
                     # s = rl.getRandomState()
                     s = randomStartState(M1)
                     reward = 0
@@ -1020,13 +1020,13 @@ def quesB4():
                         s = s1
                         step += 1
                     avg += reward
-                avg = avg/100
+                avg = avg/500
                 rewards.append(avg)
 
             plot.plot(episodes, rewards, colour[trial], markerfacecolor="c",
                       label='e = ' + str(e) + ', a = ' + str(alpha))
             plot.legend(loc="lower right")
-        # figure.savefig('QB4_' +part[0:part.index('1')+1]+".png")
+        figure.savefig('QB4_' +part[0:part.index('1')+1]+".png")
     plt.show()
 
 
