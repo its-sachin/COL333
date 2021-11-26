@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (MiKTeX 21.8) (preloaded format=pdflatex 2021.9.5)  26 NOV 2021 16:05
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (MiKTeX 21.8) (preloaded format=pdflatex 2021.9.5)  26 NOV 2021 18:30
 entering extended mode
 **e:/Semesters/Sem5/COL333/COL333/A3/report.tex
 (e:/Semesters/Sem5/COL333/COL333/A3/report.tex
@@ -44,40 +44,47 @@ File: pdftex.def 2020/10/05 v1.2a Graphics/color driver for pdftex
 ))
 \Gin@req@height=\dimen139
 \Gin@req@width=\dimen140
+) (C:\Users\sachi\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count190
+\float@exts=\toks20
+\float@box=\box50
+\@float@everytoks=\toks21
+\@floatcapt=\box51
 ) (C:\Users\sachi\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdftex.def
 File: l3backend-pdftex.def 2021-08-04 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count190
-\l__pdf_internal_box=\box50
+\l__color_backend_stack_int=\count191
+\l__pdf_internal_box=\box52
 ) (report.aux)
 \openout1 = `report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 10.
-LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 11.
+LaTeX Font Info:    ... okay on input line 11.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 11.
+LaTeX Font Info:    ... okay on input line 11.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 11.
+LaTeX Font Info:    ... okay on input line 11.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 11.
+LaTeX Font Info:    ... okay on input line 11.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 11.
+LaTeX Font Info:    ... okay on input line 11.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 11.
+LaTeX Font Info:    ... okay on input line 11.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 11.
+LaTeX Font Info:    ... okay on input line 11.
  (C:\Users\sachi\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count191
+\scratchcounter=\count192
 \scratchdimen=\dimen141
-\scratchbox=\box51
-\nofMPsegments=\count192
-\nofMParguments=\count193
-\everyMPshowfont=\toks20
-\MPscratchCnt=\count194
+\scratchbox=\box53
+\nofMPsegments=\count193
+\nofMParguments=\count194
+\everyMPshowfont=\toks22
+\MPscratchCnt=\count195
 \MPscratchDim=\dimen142
-\MPnumerator=\count195
-\makeMPintoPDFobject=\count196
-\everyMPtoPDFconversion=\toks21
+\MPnumerator=\count196
+\makeMPintoPDFobject=\count197
+\everyMPtoPDFconversion=\toks23
 ) (C:\Users\sachi\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
@@ -85,61 +92,81 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 48
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 12.
+(Font)              <12> on input line 13.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 12.
+(Font)              <8> on input line 13.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 12.
-
-Overfull \hbox (14.25081pt too wide) in paragraph at lines 22--28
-\OT1/cmr/m/n/10 of the map)*(width of the map)*(height of the map)*(number of de-pots)+(width
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 22--28
-
- []
-
-
-Overfull \hbox (29.3834pt too wide) in paragraph at lines 22--28
-\OT1/cmr/bx/n/10 Transition Model:\OT1/cmr/m/n/10 Now the ac-tion in our for-mu-la-tion are (N,S,E,W,PICK,DROP).
- []
-
-[1
+(Font)              <6> on input line 13.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 30.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 30.
+ [1
 
 {C:/Users/sachi/AppData/Local/MiKTeX/pdftex/config/pdftex.map}]
-Underfull \hbox (badness 10000) in paragraph at lines 38--40
+<QA2b.png, id=13, 462.528pt x 346.896pt>
+File: QA2b.png Graphic file (type png)
+<use QA2b.png>
+Package pdftex.def Info: QA2b.png  used on input line 76.
+(pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
+ [2] [3 <./QA2b.png>]
+<QA3b.png, id=23, 462.528pt x 346.896pt>
+File: QA3b.png Graphic file (type png)
+<use QA3b.png>
+Package pdftex.def Info: QA3b.png  used on input line 101.
+(pdftex.def)             Requested size: 246.59253pt x 184.9429pt.
+ [4 <./QA3b.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 111--116
 
  []
 
-<QA2b.png, id=11, 462.528pt x 346.896pt>
-File: QA2b.png Graphic file (type png)
-<use QA2b.png>
-Package pdftex.def Info: QA2b.png  used on input line 62.
+<QB2_QLearning_e-greedy.png, id=28, 462.528pt x 346.896pt>
+File: QB2_QLearning_e-greedy.png Graphic file (type png)
+<use QB2_QLearning_e-greedy.png>
+Package pdftex.def Info: QB2_QLearning_e-greedy.png  used on input line 140.
 (pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
-[2 <./QA2b.png>]
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 75.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 75.
-<QA3b.png, id=17, 462.528pt x 346.896pt>
-File: QA3b.png Graphic file (type png)
-<use QA3b.png>
-Package pdftex.def Info: QA3b.png  used on input line 79.
-(pdftex.def)             Requested size: 246.59253pt x 184.9429pt.
- [3 <./QA3b.png>] [4] (report.aux) ) 
+[5]
+<QB2_QLearning_exploration-decay.png, id=32, 462.528pt x 346.896pt>
+File: QB2_QLearning_exploration-decay.png Graphic file (type png)
+<use QB2_QLearning_exploration-decay.png>
+Package pdftex.def Info: QB2_QLearning_exploration-decay.png  used on input line 148.
+(pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
+<QB2_SARSA_e-greedy.png, id=33, 462.528pt x 346.896pt>
+File: QB2_SARSA_e-greedy.png Graphic file (type png)
+<use QB2_SARSA_e-greedy.png>
+Package pdftex.def Info: QB2_SARSA_e-greedy.png  used on input line 156.
+(pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
+ [6 <./QB2_QLearning_e-greedy.png> <./QB2_QLearning_exploration-decay.png>]
+<QB2_SARSA_exploration-decay.png, id=39, 462.528pt x 346.896pt>
+File: QB2_SARSA_exploration-decay.png Graphic file (type png)
+<use QB2_SARSA_exploration-decay.png>
+Package pdftex.def Info: QB2_SARSA_exploration-decay.png  used on input line 164.
+(pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
+ [7 <./QB2_SARSA_e-greedy.png> <./QB2_SARSA_exploration-decay.png>]
+<QB4_alpha=0.1.png, id=46, 462.528pt x 346.896pt>
+File: QB4_alpha=0.1.png Graphic file (type png)
+<use QB4_alpha=0.1.png>
+Package pdftex.def Info: QB4_alpha=0.1.png  used on input line 191.
+(pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
+ [8 <./QB4_alpha=0.1.png>]
+<QB4_e=0.1.png, id=51, 462.528pt x 346.896pt>
+File: QB4_e=0.1.png Graphic file (type png)
+<use QB4_e=0.1.png>
+Package pdftex.def Info: QB4_e=0.1.png  used on input line 206.
+(pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
+ [9 <./QB4_e=0.1.png>] [10] (report.aux) ) 
 Here is how much of TeX's memory you used:
- 1286 strings out of 478927
- 20303 string characters out of 2852536
- 316929 words of memory out of 3000000
- 19170 multiletter control sequences out of 15000+600000
+ 1399 strings out of 478927
+ 22588 string characters out of 2852536
+ 321104 words of memory out of 3000000
+ 19273 multiletter control sequences out of 15000+600000
  408020 words of font info for 42 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,6n,66p,540b,374s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 57i,6n,66p,525b,462s stack positions out of 5000i,500n,10000p,200000b,80000s
  <C:\Users\sachi\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1000.pk><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on report.pdf (4 pages, 162934 bytes).
+Output written on report.pdf (10 pages, 351161 bytes).
 PDF statistics:
- 65 PDF objects out of 1000 (max. 8388607)
+ 97 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 11 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 41 words of extra memory for PDF output out of 10000 (max. 10000000)
 

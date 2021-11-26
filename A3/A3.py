@@ -1011,7 +1011,7 @@ def quesB4():
                 n += 500
 
                 avg = 0
-                for ep in range(100):
+                for ep in range(10):
                     s = rl.getRandomState()
                     reward = 0
                     step = 0
@@ -1021,7 +1021,7 @@ def quesB4():
                         s = s1
                         step += 1
                     avg += reward
-                avg = avg/100
+                avg = avg/10
                 rewards.append(avg)
 
             plot.plot(episodes, rewards, colour[trial], markerfacecolor="c",
