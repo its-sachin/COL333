@@ -847,6 +847,7 @@ def quesA3b():
     plt.ylabel('Policy Loss')
     plt.xlabel('No of iterations')
     plt.legend(rng, loc="lower right")
+    plt.savefig("QA3b.png")
     plt.show()
 
 
