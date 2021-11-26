@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{enumerate}
 \usepackage{graphicx}
+\usepackage{float}
 
 \title{COL333: Assignment 3}
 \author{Sachin 2019CS10722\\ Saurabh Verma 2019CS50129 }
@@ -11,6 +12,9 @@
 
 \maketitle
 
+
+Before implementing any AI learning we created a class called Map, that stores the map and checks for walls between two cells. We also created a class called State that stores the state parameters and has some useful functions required by different components of assignment.
+Map class stores the map in the form of dictionary d (having walls) and 2 variables height and width. More of them will be explained inside the questions.
 \section{Part A: Computing Policies}
 
 
@@ -19,35 +23,45 @@
 We have created an MDP for the Taxi Domain formulation as described in the problem statement. We take the wall locations, position of depots, and width and height of the grid as input. Then we create an instance of the map class with these values and use in the MDP.
 \begin{enumerate}[a)]
     \item
-\textbf{State Space:}
+\textbf{State Space:\\}
 We have created a class for the state. Each state in Taxi Driver MDP has four identifying features: the position of the taxi, position of the passenger,a boolean variable picked denoting whether passenger is picked by the taxi, and the destination. These are the variable describing the state.\\
-Now the x position can take discrete values up to the width, y position can take up to the height.So the total number of values position of passenger and position of taxi can take is height*width. But when the boolean value of picked is true then position of taxi and passenger is same. And destination variable takes values equal to the number of depots. \\
-So that makes the total number of variables to be (width of the map)*(height of the map)*(width of the map)*(height of the map)*(number of depots)+(width of the map)*(height of the map)*(number of depots). This is the state space.\\
-\newline
-\textbf{Transition Model:}Now the action in our formulation are (N,S,E,W,PICK,DROP). So the transition model is as follows.
+Now the x position can take discrete values up to the width, y position can take up to the height. So the total number of values position of passenger and position of taxi can take is height*width. But when the boolean value of picked is true then position of taxi and passenger is same. And destination variable takes values equal to the number of depots. \\
+So that makes the total number of variables to be :- \\
+$w*h*w*h*d+w*h*d$\\ where,\\
+h = height of map\\
+w = width of map\\
+d = number of depots\\
+So state is $((x_1,y_1),(x_2,y_2),p,d)$ where $(x_1,y_1) = (x_2,y_2)$ if p is True.
+
+\pagebreak
+
+\item
+\textbf{Transition Model: \\}Now the action in our formulation are (N, S, E, W, PICK, DROP). So the transition model is as follows.
 \begin{itemize}
-    \item T((pos1,pos2,picked,d),DROP,(pos1,pos2,picked,d))=1
-    \item T((pos1,pos2,picked,d),PICK,(pos1,pos2,picked,d))=1
-\end{itemize}
-Suppose the action is N the the transition model is as follows. This same applies to all the other direction.(the x and y values get modified accordingly)
-\begin{itemize}
-    \item T(((x,y),pos2,picked,d),N,((x,y+1),pos2,picked,d))=0.85
-    \item T(((x,y),pos2,picked,d),N,((x,y-1),pos2,picked,d))=0.05
-    \item T(((x,y),pos2,picked,d),N,((x-1,y),pos2,picked,d))=0.05
-    \item T(((x,y),pos2,picked,d),N,((x+1,y),pos2,picked,d))=0.05
-    \item If there exists a wall between two position\\
-        T(((x,y),pos2,picked,d),N,((x,y),pos2,picked,d))=0\\
+    \item T(s, DROP, s')=1
+    \item T(s, PICK, s')=1
+    \item This same applies to all the other direction(the x and y values get modified accordingly)
+    \begin{itemize}
+        \item T($(t_1,p_1,p,d),N,(t_2,p_2,p,d)$) = 0\\
+        (Given that there exists a wall between two $t_1$ and $t_2$ otherwise:-)  
+        \item T($((x,y),p_1,p,d),N,((x,y+1),p_2,p,d)$) = 0.85
+        \item T($((x,y),p_1,p,d),N,((x,y-1),p_2,p,d)$) = 0.05
+        \item T($((x,y),p_1,p,d),N,((x-1,y),p_2,p,d)$) = 0.05
+        \item T($((x,y),p_1,p,d),N,((x+1,y),p_2,p,d)$) = 0.05
+    \end{itemize}
+
+    if p is True then $p_2$ = $t_2$ (taxi position in new state) else $p_2$ = $p_1$  in all above transitions.
+
 \end{itemize}
 
 
-\textbf{Reward Model:}The reward structure is as follows:
+\item \textbf{Reward Model:\\}The reward structure is as follows:
 \begin{itemize}
-    \item if pos1=pos2=d\\
-    R((pos1,pos2,picked=True,d),DROP,(pos1,pos2,picked=False,d)=10
-    \item if pos1!=pos2\\
-    R((pos1,pos2,picked,d),PICK,(pos1,pos2,picked,d))=-10
-    \item if pos1!=pos2\\
-    R((pos1,pos2,picked,d),DROP,(pos1,pos2,picked,d))=-10 if pos1!=pos2 
+    \item R($(d.pos,d.pos,True,d),DROP,(d.pos,d.pos,False,d)$) = 20
+    \item R($s,DROP,(t_2,p_2,p,d)$) = -10\\
+        (Given that $t_2 != p_2$)
+    \item R($s,PICK,(t_2,p_2,p,d)$) = -10\\
+        (Given that $t_2 != p_2$)
     \item All other transitions have a reward of -1
 \end{itemize}
 \end{enumerate}
@@ -55,18 +69,26 @@ Suppose the action is N the the transition model is as follows. This same applie
 
 \subsection{Implementing Value Iteration for the Taxi Domain:}
 \begin{enumerate}[a)]
-    \item We implemented the policy iteration in our code in the MDP class. The policy iteration took epsilon as the input. Also, the default value of gamma is set to be 0.9 but can be changed as specified. For the epsilon value of 0.1, the number of iteration the code took to converge is 15.
-    \item The plot of max norm distance vs iteration index is given as follow: (The discount factors are given in the range [0.01,0.1,0.5,0.8,0.99] in that order)
+    \item We implemented the value iteration in our code inside valueIteration() function in the MDP class. The value iteration took epsilon as the input. Also, the default value of $\gamma$ is set to be 0.9 but can be changed as specified. For the epsilon value of 0.1, the number of iteration the code took to converge is 15.
+    \item The plot of Max-norm distance vs Iteration index is given as follow: (The discount factors are given in the range [0.01,0.1,0.5,0.8,0.99] in that order)
     \begin{center}
-        \begin{figure}[h]
+        \begin{figure}[H]
 \hfill\includegraphics[width=9cm]{QA2b.png}\hspace*{\fill}
         \caption{Max Norm distance vs iteration Index}
         \label{fig:Max Norm distance vs iteration Index}
 \end{figure}
 \end{center}
-    The max-norm distance in a sense signifies the maximum difference from the optimal value. So as the number of iteration of convergence is increasing we are coming more and more close to the optimal value. Our estimates are improving further and further as we increase the number of iterations, hence the max-norm distance decreases. \\
+    The max-norm distance is the amount of error we can incoperated in the values, that in a sense signifies the maximum difference from the optimal value. So as the number of iteration of convergence is increasing we are coming more and more close to the optimal value. Our estimates are improving further and further as we increase the number of iterations, hence the max-norm distance decreases. \\
     One another way to look at it is that as the max-norm distance decreases, the estimate value must be close to the optimal value itself, hence the number of iteration of convergence is more. 
-    \item
+    \item In this part we were asked to simulate the policy obtained using the value iteration once with $\gamma$ 0.1 and then with 0.99 with bound of 20 steps. Following are the results:- 
+    
+    \begin{itemize}
+        \item \textbf{$\gamma$ = 0.1: } In this case the policy obtained are not optimal and taxi performs very poorely, very rarely it picks and drops the passenger in 20 states bound.
+        \item \textbf{$\gamma$ = 0.99: } In this case policy obtained is optimal and taxi successfully picks and drops the passenger in required destination within 20 states.
+    \end{itemize}
+
+    This is because $\gamma$ denotes the discount factor of algorithm, that is quantifier of importance given to Values of states that are visited later (far off states) so if $\gamma$ is kept low, then there is less transfer of imformation from one state to another (because there is more attenuation) and hence poor learning.
+
 \end{enumerate}
 \subsection{Implementing Policy Iteration for the Taxi Domain:}
 \begin{enumerate}[a)]
@@ -80,6 +102,7 @@ The linear algebra method takes O($n^3$) time for policy evaluation, where n is 
 \end{figure}
 \end{center}
 
+\pagebreak
 
 \section{Part B: Incorporating Learning}
 
@@ -89,7 +112,9 @@ In this part we had to implement the Q learning and SARSA reinforcement learning
 For doing that we made a general function that on changing parameter becomes required algorithm. This function takes epsilon and alpha as
 parameters and learns the optimal Q table. Initially we started with Q table with all values 0 and performed n number of iterations of episodes. In 
 each episode, starting from a random state we keep on moving to next state by performing action depending upon exploration technique and updating Q value depending on
-algorithm (Q learning or SARSA) by using the reward got upon performing that action untill we reached terminal state. 
+algorithm (Q learning or SARSA) by using the reward got upon performing that action untill we reached terminal state. \\
+
+Learning techniques:- 
 \begin{itemize}
     \item \textbf{Q learning: }  This is an online algorithm, where Q table is updated using the following formula:- 
         $ $
@@ -97,11 +122,112 @@ algorithm (Q learning or SARSA) by using the reward got upon performing that act
         $ $
 \end{itemize}
 
+Exploration techniques:- 
 \begin{itemize}
     \item \textbf{e-greedy: } Any random action with probability e otherwise best action according to Q table.
     \item \textbf{exploration decay: } Any random action with probability e/$\sqrt{i}$ (where i = iteration number) otherwise best action according to Q table.
 \end{itemize}
 
+
+\subsection{Number of iterations VS Discounted reward:}
+In this part we needed to plot Number of iterations VS Max-norm dist graph for all the algo in part 1. For that we first find the Policy by varying number of iterations and then found 
+sum of discounted rewards for 100 random states (for better results) and then average out the reward. And then plotted the graph between number of iteration and discounted reward sum. Same is repeated for all algorithms.\\
+Following are the results:-
+
+
+\begin{center}
+    \begin{figure}[H]
+    \hfill\includegraphics[width=9cm]{QB2_QLearning_e-greedy.png}\hspace*{\fill}
+    \caption{QLearning e greedy}
+    \label{fig:QLearning_e-greedy}
+\end{figure}
+\end{center}
+
+\begin{center}
+    \begin{figure}[H]
+    \hfill\includegraphics[width=9cm]{QB2_QLearning_exploration-decay.png}\hspace*{\fill}
+    \caption{QLearning exploration decay}
+    \label{fig:QLearning_exploration-decay}
+\end{figure}
+\end{center}
+
+\begin{center}
+    \begin{figure}[H]
+    \hfill\includegraphics[width=9cm]{QB2_SARSA_e-greedy.png}\hspace*{\fill}
+    \caption{SARSA e greedy}
+    \label{fig:SARSA_e-greedy}
+\end{figure}
+\end{center}
+
+\begin{center}
+    \begin{figure}[H]
+    \hfill\includegraphics[width=9cm]{QB2_SARSA_exploration-decay.png}\hspace*{\fill}
+    \caption{SARSA exploration decay}
+    \label{fig:SARSA_exploration-decay}
+\end{figure}
+\end{center}
+
+\textbf{Analysis: }
+
+
+\subsection{Execution using learned policy:}
+In this we started from any random start state used the policy values learned using Q learning with exploration decay to perform action at any state. So basically 
+we simulated the episode using learned actions. This is done on 5 random start states. Following are the results:-
+
+\begin{itemize}
+    \item The taxi is able to successfully pick the passenger and then drop it at the correct destination in less than the bound set(500) on steps.
+    \item There are stochastic behaviour in next state. Sometimes when taxi takes action North, still it moves in direction other than North.
+    \item But taxi is able to overcome that probabilistic behaviour and able to perform optimally from any given state.
+\end{itemize}
+
+\subsection{Analysing effect on policy by changing epsilon and alpha:}
+In this we needed to plot graph of part 3 by changing alpha and epsilon for Q learning with e-greedy. Following are the results:- 
+
+\begin{enumerate}
+    \item \textbf{alpha = 0.1 and varying epsilon: }
+    
+    \begin{center}
+        \begin{figure}[H]
+        \hfill\includegraphics[width=9cm]{QB4_alpha=0.1.png}\hspace*{\fill}
+        \caption{alpha = 0.1 and varying epsilon}
+        \label{fig: alpha = 0.1 and varying epsilon}
+    \end{figure}
+    \end{center}
+
+    It can be seen from the graph that as epsilon is increased, rewards converges in lesser number of iterations. This is quite imperative as 
+    epsilon is the probability with which we are exploring states and as more and more states are observed, changes in Q values from far off state travels 
+    faster. But there is a tradeoff in time taken per episode. Since we are giving more priority in exploring than exploiting current state, terminal state is 
+    reached in larger time.
+
+    \item \textbf{epsilon = 0.1 and varying alpha: }
+    
+    \begin{center}
+        \begin{figure}[H]
+        \hfill\includegraphics[width=9cm]{QB4_e=0.1.png}\hspace*{\fill}
+        \caption{epsilon = 0.1 and varying alpha}
+        \label{fig: epsilon = 0.1 and varying alpha}
+    \end{figure}
+    \end{center}
+
+    It can be seen from the graph that as $\alpha$ is increased the rate of convergence decreases (reward is low and there are large fluctuations). This is because as $\alpha$ is 
+    increased, the importance given to next state achieved is increased and importance to the past Q value that is recorded so for is decreased. Hence only nearby neighbours of any 
+    state affect it and positive rewards in far off state is not travelled (well, it is travelled but gets attenuated as constant 1-$\alpha$ is multiplied to it that decreases as $\alpha$ is increased).
+    This also explains the reason of large fluctuations, random state that is closer to terminal state will result in positive reward and correct policy but far off state will result is high negative reward.
+
+\end{enumerate}
+
+
+\subsection{Testing on larger grid:}
+For this part we were required to test out best algorithm on 10*10 grid provided. For that we first created the grid using the method explained in first part, then we calculated the optimal Policies for all 8 destinations using all 4 algorithm(10,000 iterations) and stored them. Then we found discounted reward sum on 500 instances of problem and took average of that.
+Here are the resuls of all the 4 policies:- 
+\begin{itemize}
+    \item \textbf{Q Learning with e-greedy: } -9.39
+    \item \textbf{Q Learning with exploration decay: }  -8.32
+    \item \textbf{SARSA with e-greedy: }  -18.70
+    \item \textbf{SARSA with exploration decay: } -8.61
+\end{itemize}
+
+Hence best algorithm is Q Learning with exploration decay.
 
 \end{enumerate}
 \end{document}

@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1637922926 "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" "report.pdf" "report" 1637922927
+["pdflatex"] 1637935105 "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" "report.pdf" "report" 1637935107
   "C:/Users/sachi/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1000.pk" 1630836279 11548 90f32ca402142a3a5a46501564b29aef ""
   "C:/Users/sachi/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1630834124 9715383 3f3e24fb5183498c2db26a3dc7a74ee7 ""
   "C:/Users/sachi/AppData/Local/MiKTeX/pdftex/config/pdftex.map" 1635350063 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
@@ -30,6 +30,7 @@
   "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/base/inputenc.sty" 1623741700 5049 969aec05d5f39c43f8005910498fcf90 ""
   "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/base/size10.clo" 1623741700 8448 05e1c6a8fc5db344ed9d7aeb299acbce ""
   "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/epstopdf-pkg/epstopdf-base.sty" 1623003186 13886 d1306dcf79a944f6988e688c1785f9ce ""
+  "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/float/float.sty" 1469023953 6916 16d2656a1984957e674b149555f1ea1d ""
   "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/graphics-cfg/graphics.cfg" 1465894292 1224 978390e9c2234eab29404bc21b268d1e ""
   "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/graphics-def/pdftex.def" 1622562294 19103 48d29b6e2a64cb717117ef65f107b404 ""
   "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/graphics/graphics.sty" 1623003325 18399 7e40f80366dffb22c0e7b70517db5cb4 ""
@@ -40,9 +41,15 @@
   "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/tools/enumerate.sty" 1622550326 3468 068d84ef9735e15f11c5a120c0a1a139 ""
   "QA2b.png" 1637920887 20605 d04eb348c4a91bc9c1e5e39e6b625113 ""
   "QA3b.png" 1637920891 41689 cb9f0070866e761af8a66c9c37b32a2c ""
-  "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" 1637922925 6976 27646264bd3e871cd683502504b03bec ""
-  "report.aux" 1637922927 1031 4c100d21a18141aeffaa2641373255e1 "pdflatex"
-  "report.tex" 1637922925 6976 27646264bd3e871cd683502504b03bec ""
+  "QB2_QLearning_e-greedy.png" 1637929194 22144 e9b3f7ef78db5409f5a5ce99c1e0ba56 ""
+  "QB2_QLearning_exploration-decay.png" 1637929176 24283 3a556b28e8f57337f3562c4604ad4937 ""
+  "QB2_SARSA_e-greedy.png" 1637929187 23598 d2627315ee0fac7ffd42cd981dbdcab1 ""
+  "QB2_SARSA_exploration-decay.png" 1637929199 23966 5dde236da98b20593e211c0c7b91f232 ""
+  "QB4_alpha=0.1.png" 1637904145 45123 8bbd0fb3c6e1d41a81131da5004ff807 ""
+  "QB4_e=0.1.png" 1637904340 56231 f2c25d63b244085ba70f345aca4ed01e ""
+  "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" 1637935104 13657 fc91d85c6c8faefe9ad516a0ba82de7a ""
+  "report.aux" 1637935106 2609 47eb9846fdde337c52d909ddc444adcb "pdflatex"
+  "report.tex" 1637935104 13657 fc91d85c6c8faefe9ad516a0ba82de7a ""
   (generated)
   "report.aux"
   "report.pdf"
