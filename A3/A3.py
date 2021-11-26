@@ -1057,20 +1057,14 @@ def quesB5():
     avg = 0
     num = 500
 
-    rr = []
     for i in range(num):
         d = random.randint(0, len(M2.depots)-1)
         s = randomStartState(M2, M2.itod(d))
 
         reward = perform(s)
         avg += reward
-        rr.append(reward)
 
     print('\n\nAVERAGE DISCOUNTED REWARD: ', avg/num)
-
-    figure, plot = plt.subplots()
-    plot.plot(rr, label='(x,y)')
-    plt.show()
 
 
 if(len(argv) == 1):
