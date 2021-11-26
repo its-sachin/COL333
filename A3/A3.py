@@ -5,8 +5,11 @@ from numpy.core.fromnumeric import shape
 from matplotlib import pyplot as plt
 from sys import argv
 
+# A class for the functions related to the map such as walls has attributes of the map such as heidth weidth etc and useful fucntions
+
 
 class Map:
+    # initilise the map with the height width walls and depots
     def __init__(self, height, width, walls, depots):
         self.height = height
         self.width = width
@@ -33,10 +36,12 @@ class Map:
     # depot to integer (Useful for array indexing)
     def dtoi(self, d):
         return self.dests.index(d)
-        
+
+# A class containing all the functions uselful for the states and attributes for the state
+
 
 class State:
-
+    # the location of taxi and passenger and whether the pasenger is picked and destination depots form the inique features of the state
     def __init__(self, p1, p2, p, d):
         self.taxiPos = (p1[0], p1[1])
         self.passengerPos = p2
@@ -70,7 +75,7 @@ class State:
     # Gives all possible tranitions from current state (self)
     def getNeighbours(self, a):
         neigh = []
-
+        # if terminal state then no niegbours
         if(self.isTerminal()):
             return neigh
 
@@ -101,7 +106,8 @@ class State:
                     s1 = State(pos, pos2, self.picked, self.dest)
                     if(self.isValidTransition(s1)):
                         neigh.append(s1)
-            neigh.append(State(self.taxiPos, self.passengerPos, self.picked, self.dest))
+            neigh.append(
+                State(self.taxiPos, self.passengerPos, self.picked, self.dest))
 
         return neigh
 
@@ -151,24 +157,26 @@ class State:
 
     # Checks if state is terminal or not
     def isTerminal(self):
-        # print(self.taxiPos,self.passengerPos,self.picked,self.dest)
-        # if(self.passenger == self.dest and self.taxiPos ==  self.map.depots[self.passenger]):
         if((not self.picked) and self.passengerPos == State.map.depots[self.dest]):
             return True
         return False
 
+# A class for managing the table values more efficiently (used in value and policy iterations etc.)
+
 
 class Table:
 
+    # has map of the problem as an attribute and the mode , mode has 3 options Q(for Q learning) Value and Policy for value and policy iteration respectively
     def __init__(self, map: Map, mode):
 
-        # table[x1][y1][d][p][x2][y2]
         self.mode = mode
         self.map = map
+        # intialising the table values for different cases
         if(mode == 'Q'):
             self.table = [[[[[[[0 for a in range(6)]for k in range(len(self.map.depots))] for p in range(2)] for l in range(self.map.height)]
                             for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
         else:
+
             if(mode == 'VALUE'):
                 val = 0
             elif(mode == 'POLICY'):
@@ -177,6 +185,7 @@ class Table:
             self.table = [[[[[[val for k in range(len(self.map.depots))] for p in range(2)] for l in range(self.map.height)]
                             for m in range(self.map.width)] for i in range(self.map.height)] for j in range(self.map.width)]
 
+    # given the state and possibly action in case of q learning give the appropriate table value ie utlity of the state
     def getVal(self, s: State, a=None):
         p = 0
         if(s.picked):
@@ -184,6 +193,8 @@ class Table:
         if(self.mode == 'Q'):
             return self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]][s.passengerPos[1]][p][self.map.dtoi(s.dest)][a]
         return self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]][s.passengerPos[1]][p][self.map.dtoi(s.dest)]
+
+    # given the state and possibly action in case of q learning set the appropriate table value ie utlity of the state to val
 
     def setVal(self, s: State, val, a=None):
         p = 0
@@ -196,6 +207,7 @@ class Table:
             self.table[s.taxiPos[0]][s.taxiPos[1]][s.passengerPos[0]
                                                    ][s.passengerPos[1]][p][self.map.dtoi(s.dest)] = val
 
+    # given the table returns the sum of all the values (ie utility) for the table
     def summ(self):
         val = 0
         for i in range(self.map.width):
@@ -207,6 +219,7 @@ class Table:
                                 val += self.table[i][j][k][l][m][n]
         return val
 
+    # Function to change get  the table of mode Policy from table of mode Q.
     def QtoP(self):
         if(self.mode == 'Q'):
             P = Table(self.map, 'POLICY')
@@ -219,18 +232,21 @@ class Table:
                         for y in range(self.map.height-1, -1, -1):
                             for x in range(self.map.width):
                                 val = self.table[x][y][x][y][p][d]
-                                P.table[x][y][x][y][p][d] = actions[val.index(max(val))]
+                                P.table[x][y][x][y][p][d] = actions[val.index(
+                                    max(val))]
 
                     else:
-    
+
                         for i in range(self.map.width):
                             for j in range(self.map.height):
                                 for y in range(self.map.height-1, -1, -1):
                                     for x in range(self.map.width):
                                         val = self.table[x][y][i][j][p][d]
-                                        P.table[x][y][i][j][p][d] = actions[val.index(max(val))]
+                                        P.table[x][y][i][j][p][d] = actions[val.index(
+                                            max(val))]
         return P
 
+    # Function to print the values of the table in a correct format
     def printVal(self):
 
         actions = ['N', 'S', 'W', 'E', 'PICK', 'DROP']
@@ -265,13 +281,16 @@ class Table:
                                     print(val, end=', ')
                                 print()
 
+# Class implementing the MDP formulation of the taxi domain problem has all the implemetation of the value iteration and policyiteration etc.
+
 
 class MDP:
+    # just has the mapmof mdp as an attribute
     def __init__(self, m: Map):
         self.map = m
         State.map = m
 
-    # Trnsition function
+    # Trnsition function of the MDP
     def T(self, s: State, a, s1: State):
 
         if(a == 'PICK' or a == 'DROP'):
@@ -292,7 +311,7 @@ class MDP:
             if(s.taxiPos == s1.taxiPos):
                 p = 0
                 for i in direc:
-                    s2 = State(direc[i],direc[i],True,s.dest)
+                    s2 = State(direc[i], direc[i], True, s.dest)
                     if(not s.isValidTransition(s2)):
                         # print('lol',s.taxiPos,direc[i],i,a)
                         if(a == i):
@@ -312,41 +331,40 @@ class MDP:
 
         return 0
 
+    # helper function which gives the bellaman ford update of the iteration and returns the new uility and policy
     def update(self, gamma, s, V):
         maxx = None
         for a in ['PICK', 'DROP', 'N', 'S', 'W', 'E']:
-
             neigh = s.getNeighbours(a)
-            # print(a,len(neigh))
             if(len(neigh) > 0):
                 curr = 0
                 for s1 in neigh:
                     t = self.T(s, a, s1)
                     if(t > 0):
-                        # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, s.R(a, s1),t, t*(s.R(a, s1) + gamma*V.getVal(s1)))
                         curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
-                # print('----CURR: ' ,curr)
-
                 if(maxx == None or maxx[0] < curr):
                     maxx = [curr, a]
         return maxx
 
+    # helper function which iterates over all of the table and updates the value according to the the update function taken as input
     def iterate(self, update):
         changed = False
         delta = 0
+        # iterate over all the state space and then update
         for x1 in range(self.map.width):
             for y1 in range(self.map.height):
                 for p in range(2):
                     for d in range(len(self.map.depots)):
 
                         picked = (p == 1)
-
+                        # if picked then the taxi pos and the passenger pos is the same
                         if(picked):
                             s = State((x1, y1), (x1, y1),
                                       picked, self.map.itod(d))
                             delta = update(s, delta)
                             if(type(delta) == bool and delta):
                                 changed = True
+                        # else iterate over both taxipos and passenger pos
                         else:
                             for x2 in range(self.map.width):
                                 for y2 in range(self.map.height):
@@ -359,60 +377,58 @@ class MDP:
         return (delta, changed)
 
     # Performs value iteration
-    # TODO: have to add max-norm using epsilon
-    def valueIteration(self, e, gamma = 0.9):
-    
+    def valueIteration(self, e, gamma=0.9):
+
+        # table containing the utilities of the state
         V = Table(self.map, 'VALUE')
+        # table containing the policy of the state space
         P = Table(self.map, 'POLICY')
 
         delta = 10
         i = 0
 
+        # bellamn ford update for the value iteration updates
         def update(s, delta):
 
             maxx = self.update(gamma, s, V)
 
-            # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None):
-                # print(V[x1][y1][x2][y2][p][d],maxx[0])
                 change = abs(maxx[0] - V.getVal(s))
                 V.setVal(s, maxx[0])
                 P.setVal(s, maxx[1])
                 delta = max(change, delta)
-                # print('LOL',P[x1][y1][x2][y2][p][d])
             return delta
 
         # ---------------------------------------------------------------------------------------
-
+        # iteration using the max norm distance as the convergence criterion
         while delta >= (1-gamma)*e/gamma:
 
             delta = self.iterate(update)[0]
             i += 1
-            # print('Iteration', i, delta, end='\r')
-
-        # P.printVal()
         return P, i
 
+    # implmentation of the policy iteration
     def policyIteration(self, e, gamma=0.9):
+        # table containing the utilities of the state
         V = Table(self.map, 'VALUE')
+        # table containing the policy of the state space
         P = Table(self.map, 'POLICY')
-        global policyE
+        global policyE  # array conating the sum of utilities of the state used for policy loss
 
         delta = 10
         i = 0
         flag = True
 
+        # updates for the policy convergence step in the iteration
         def update(s, delta):
             a = P.getVal(s)
             neigh = s.getNeighbours(a)
-            # print(a,len(neigh))
             if(len(neigh) > 0):
                 curr = 0
                 for s1 in neigh:
                     t = self.T(s, a, s1)
 
                     if(t > 0):
-                        # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)])
                         curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
                 change = abs(curr - V.getVal(s))
                 V.setVal(s, curr)
@@ -420,6 +436,7 @@ class MDP:
                     delta = change
             return delta
 
+        # updates for the policy improvement step in the iterartion
         def updateP(s, delta=0):
             boolV = False
             maxx = self.update(gamma, s, V)
@@ -430,7 +447,8 @@ class MDP:
                 boolV = True
             return boolV
 
-        # ---------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------------------------#
+        # the loop of the policy iteration run till theere is change in the policy
         while flag:
 
             # policy evaluation phase
@@ -438,6 +456,7 @@ class MDP:
             delta = 10
             while delta >= (1-gamma)*e/gamma:
                 delta = self.iterate(update)[0]
+            # add the new sum of utility
             policyE.append(V.summ())
             # policy improvement phase
             flag = self.iterate(updateP)[1]
@@ -446,31 +465,37 @@ class MDP:
             print('Iteration', i, end='\r')
         # P.printVal()
 
+    # function for the policy iteration using the linear algebra
+
     def policyIteration_l(self, gamma=0.99):
         w = self.map.width
         h = self.map.height
         de = len(self.map.depots)
+        # table containing the utilities of the state
         V = Table(self.map, 'VALUE')
+        # table containing the policy of the state space
         P = Table(self.map, 'POLICY')
         changed = True
         i = 0
 
+        # policy updates
         def updateP(s, delta=0):
             boolV = False
             maxx = self.update(gamma, s, V)
-            # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None and maxx[1] != P.getVal(s)):
                 P.setVal(s, maxx[1])
                 boolV = True
             return boolV
 
         # ---------------------------------------------------------------------------------------
+        # loop of the policy iteration
         while changed:
 
-            matrix = []
-            const = []
+            matrix = []  # matrix for the set of linear equation ie coeficients
+            const = []  # the constant value of the linear equation
             changed = False
-
+            # creating the matric of the linear equation
+            # case when picked is True
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for d in range(len(self.map.depots)):
@@ -499,7 +524,7 @@ class MDP:
                         else:
                             const.append(0)
                         matrix.append(temp)
-
+            # case when picked is false
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for x2 in range(self.map.width):
@@ -531,13 +556,14 @@ class MDP:
                                 else:
                                     const.append(0)
                                 matrix.append(temp)
-            # print(matrix)
+            # solve the linear equation usinf linear algebra solvers
             ans = np.linalg.solve(np.array(matrix), np.array(const))
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for d in range(len(self.map.depots)):
                         s = State((x1, y1), (x1, y1), True, self.map.itod(d))
                         V.setVal(s, ans[x1*h*de+y1*de+d])
+            # extract back the values to the table
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for x2 in range(self.map.width):
@@ -547,15 +573,17 @@ class MDP:
                                           False, self.map.itod(d))
                                 V.setVal(
                                     s, ans[w*h*de + x1*h*w*h*de+y1*w*h*de+x2*h*de+y2*de+d])
-
+            # Now perform the policy iteration
             changed = self.iterate(updateP)[1]
             i += 1
             print('Iteration', i, end='\r')
-        P.printVal()
+        # P.printVal()
 
 
 # Change this value for number of episodes in learning
 n = 50000
+
+# class for the reinforcmenet learning
 
 
 class RL:
@@ -573,10 +601,10 @@ class RL:
         p = d
         while p == d:
             p = self.map.itod(random.randint(1, len(self.map.depots))-1)
-        return State((x1,y1),self.map.depots[p], False, d)
+        return State((x1, y1), self.map.depots[p], False, d)
 
     # Generalised learning that can perform any learning specified in question (by changing parameters)
-    def generalLearning(self, e, isE_Greedy, isQ, alpha=0.25, gamma=0.99, dest = None):
+    def generalLearning(self, e, isE_Greedy, isQ, alpha=0.25, gamma=0.99, dest=None):
 
         Q = Table(self.map, 'Q')
         actions = ['N', 'S', 'W', 'E', 'PICK', 'DROP']
@@ -609,10 +637,11 @@ class RL:
             while(not s.isTerminal()):
                 a = policy(s, e, it)
                 s1, r = s.getNext(actions[a])
-                val = (1-alpha)*Q.getVal(s, a) + alpha * (r + gamma*Q.getVal(s1, getBest(s1)))
+                val = (1-alpha)*Q.getVal(s, a) + alpha * \
+                    (r + gamma*Q.getVal(s1, getBest(s1)))
                 Q.setVal(s, val, a)
                 # print(s.taxiPos,s.passengerPos,s.picked,s.dest,'[Action: ',actions[a],']->',s1.taxiPos,s1.passengerPos,s1.picked,s1.dest,'[Reward',r,']')
-                s = s1         
+                s = s1
 
         def SARSA(policy, it):
             s = self.getRandomState(dest)
@@ -620,7 +649,8 @@ class RL:
             while(not s.isTerminal()):
                 s1, r = s.getNext(actions[a])
                 a1 = policy(s1, e, it)
-                val = (1-alpha)*Q.getVal(s, a) + alpha * (r + gamma*Q.getVal(s1, a1))
+                val = (1-alpha)*Q.getVal(s, a) + alpha * \
+                    (r + gamma*Q.getVal(s1, a1))
                 Q.setVal(s, val, a)
                 # print(s.taxiPos,s.passengerPos,s.picked,s.dest,'[Action: ',actions[a],']->',s1.taxiPos,s1.passengerPos,s1.picked,s1.dest,'[Reward',r,']')
                 s = s1
@@ -635,7 +665,7 @@ class RL:
         else:
             policy = decay
 
-        for _ in range(1, n+1):        
+        for _ in range(1, n+1):
             if(isQ):
                 QLearning(policy, _)
             else:
@@ -648,19 +678,20 @@ class RL:
 
 #    Utilise thsese Q table as per output format
 
-    def Qlearning_E(self, e, alpha=0.25, dest = None):
-        return self.generalLearning(e, True, True, alpha, dest= dest)
+    def Qlearning_E(self, e, alpha=0.25, dest=None):
+        return self.generalLearning(e, True, True, alpha, dest=dest)
 
-    def Qlearning_D(self, e, alpha=0.25, dest = None):
-        return self.generalLearning(e, False, True, alpha, dest= dest)
+    def Qlearning_D(self, e, alpha=0.25, dest=None):
+        return self.generalLearning(e, False, True, alpha, dest=dest)
 
-    def SARSA_E(self, e, alpha=0.25, dest = None):
-        return self.generalLearning(e, True, False, alpha, dest= dest)
+    def SARSA_E(self, e, alpha=0.25, dest=None):
+        return self.generalLearning(e, True, False, alpha, dest=dest)
 
-    def SARSA_D(self, e, alpha=0.25, dest = None):
-        return self.generalLearning(e, False, False, alpha, dest= dest)
+    def SARSA_D(self, e, alpha=0.25, dest=None):
+        return self.generalLearning(e, False, False, alpha, dest=dest)
 
 
+# walls for the Part A
 walls1 = {
     (0, 0): {(1, 0): True},
     (0, 1): {(1, 1): True},
@@ -670,13 +701,14 @@ walls1 = {
     (2, 1): {(3, 1): True}
 }
 
+# depots for the Part A
 depots1 = {
     'Y': (0, 0),
     'R': (0, 4),
     'B': (3, 0),
     'G': (4, 4)
 }
-
+# walls for the Part B
 walls2 = {
     (0, 0): {(1, 0): True},
     (0, 1): {(1, 1): True},
@@ -709,6 +741,7 @@ walls2 = {
     (7, 9): {(8, 0): True},
 }
 
+# depots for the Part B
 depots2 = {
     'Y': (0, 1),
     'R': (0, 9),
@@ -725,7 +758,8 @@ depots2 = {
 M1 = Map(5, 5, walls1, depots1)
 M2 = Map(10, 10, walls2, depots2)
 
-def randomStartState(m:Map,dest = None):
+
+def randomStartState(m: Map, dest=None):
     t = m.itod(random.randint(1, len(m.depots))-1)
     d = dest
     if(dest == None):
@@ -733,26 +767,27 @@ def randomStartState(m:Map,dest = None):
     p = d
     while p == d:
         p = m.itod(random.randint(1, len(m.depots))-1)
-    return State(m.depots[t],m.depots[p], False, d)
+    return State(m.depots[t], m.depots[p], False, d)
 
-def quesA1b(t,p,d):
+
+def quesA1b(t, p, d):
 
     print('\n\n-----------RUNNING QUES A.1.b--------------\n\n')
-    s = State(M1.depots[t],M1.depots[p],False,d)
+    s = State(M1.depots[t], M1.depots[p], False, d)
     State.map = M1
-    actions = ['PICK','DROP','N','S','W','E']
+    actions = ['PICK', 'DROP', 'N', 'S', 'W', 'E']
 
     while True:
 
-        print('STATE: ',s.taxiPos,s.passengerPos,s.picked,s.dest)
+        print('STATE: ', s.taxiPos, s.passengerPos, s.picked, s.dest)
         a = input('\nACTION: ')
         if(a not in actions):
-            if(a=='STOP'):
+            if(a == 'STOP'):
                 break
             print('INVALID ACTION')
         else:
-            s1,r = s.getNext(a)
-            print('REWARD: ',r)
+            s1, r = s.getNext(a)
+            print('REWARD: ', r)
         s = s1
 
 
@@ -761,7 +796,7 @@ def quesA2a():
     print('\n\n-----------RUNNING QUES A.2.a--------------\n\n')
 
     mdp = MDP(M1)
-    _,n = mdp.valueIteration(0.1,0.9)
+    _, n = mdp.valueIteration(0.1, 0.9)
     # V.printVal()
     print('\nEPSILON', 0.1, 'NO OF ITERATIONS:', n)
 
@@ -790,33 +825,35 @@ def quesA2b():
 
     plt.show()
 
-def quesA2C(M:Map,taxi,passenger,dest):
+
+def quesA2C(M: Map, taxi, passenger, dest):
 
     print('\n\n-----------RUNNING QUES A.2.c--------------\n\n')
 
-    s = State(M.depots[taxi],M.depots[passenger],False,dest)
+    s = State(M.depots[taxi], M.depots[passenger], False, dest)
     mdp = MDP(M)
 
-    def perform(gamma,s):
+    def perform(gamma, s):
 
-        print('[Gamma =',gamma,']\n')
+        print('[Gamma =', gamma, ']\n')
         print('EVALUATING(Value iteration)')
-        P,_ = mdp.valueIteration(0.1,gamma)
+        P, _ = mdp.valueIteration(0.1, gamma)
         i = 0
 
         print('SIMULATING')
-        while(i<20 and not s.isTerminal()):
-            print('STATE: [',s.taxiPos,s.passengerPos,s.picked,s.dest, ']')
+        while(i < 20 and not s.isTerminal()):
+            print('STATE: [', s.taxiPos, s.passengerPos, s.picked, s.dest, ']')
             a = P.getVal(s)
-            print('ACTION: [',a,']\n')
-            s1,r =  s.getNext(a)
+            print('ACTION: [', a, ']\n')
+            s1, r = s.getNext(a)
 
             s = s1
             i += 1
 
         print('-----------------SIMUALTION ENDED ------------------\n\n')
-    perform(0.1,s)
-    perform(0.99,s)
+    perform(0.1, s)
+    perform(0.99, s)
+
 
 policyE = []
 
@@ -859,22 +896,22 @@ def quesB2():
     rl = RL(M1)
 
     algos = {
-    rl.Qlearning_E: 'QLearning_e-greedy',
-    rl.Qlearning_D: 'QLearning_exploration-decay',
-    rl.SARSA_E : 'SARSA_e-greedy',
-    rl.SARSA_D: 'SARSA_exploration-decay'
+        rl.Qlearning_E: 'QLearning_e-greedy',
+        rl.Qlearning_D: 'QLearning_exploration-decay',
+        rl.SARSA_E: 'SARSA_e-greedy',
+        rl.SARSA_D: 'SARSA_exploration-decay'
     }
 
     for algo in algos:
-        
+
         rewards = []
         episodes = []
 
         n = 0
         for i in range(10):
 
-            print('[LEARNING',algos[algo],' with N = ',n,']')
-            P = algo(0.1) 
+            print('[LEARNING', algos[algo], ' with N = ', n, ']')
+            P = algo(0.1)
             episodes.append(n)
             n += 500
 
@@ -884,17 +921,17 @@ def quesB2():
                 reward = 0
                 step = 0
                 while(step < 500 and not s.isTerminal()):
-                    s1,r = s.getNext(P.getVal(s))
-                    reward += r*pow(0.99,step)
+                    s1, r = s.getNext(P.getVal(s))
+                    reward += r*pow(0.99, step)
                     s = s1
                     step += 1
                 avg += reward
             avg = avg/100
             rewards.append(avg)
 
-        figure,plot = plt.subplots()
-        plot.plot(episodes,rewards, "c", markerfacecolor = "c")
-        plot.grid(True, color = "k")
+        figure, plot = plt.subplots()
+        plot.plot(episodes, rewards, "c", markerfacecolor="c")
+        plot.grid(True, color="k")
         plot.set_title(algos[algo])
         plot.set_ylabel('Discounted Reward')
         plot.set_xlabel('No of episodes')
@@ -902,6 +939,7 @@ def quesB2():
         # figure.savefig('QB2_' + algos[algo]+".png")
         print()
     plt.show()
+
 
 def quesB3():
 
@@ -916,10 +954,10 @@ def quesB3():
     def perform(s):
         step = 0
         while(step < 500 and not s.isTerminal()):
-            print('STATE: [',s.taxiPos,s.passengerPos,s.picked,s.dest, ']')
+            print('STATE: [', s.taxiPos, s.passengerPos, s.picked, s.dest, ']')
             a = P.getVal(s)
-            print('ACTION: [',a,']\n')
-            s1,r = s.getNext(a)
+            print('ACTION: [', a, ']\n')
+            s1, r = s.getNext(a)
             s = s1
             step += 1
 
@@ -927,8 +965,9 @@ def quesB3():
 
     for i in range(5):
         s = randomStartState(M1)
-        print('RUNNING ON INSTANCE',i+1)
+        print('RUNNING ON INSTANCE', i+1)
         perform(s)
+
 
 def quesB4():
 
@@ -940,25 +979,25 @@ def quesB4():
     colour = ['b', 'g', 'r', 'c', 'm']
     # (e,alpha)
     values = {
-        'alpha=0.1 varying e' : [(0,0.1), (0.05,0.1), (0.1,0.1), (0.5,0.1), (0.9,0.1)],
-        'e=0.1 varying alpha' : [(0.1,0.1), (0.1,0.2), (0.1,0.3), (0.1,0.4), (0.1,0.5)]
+        'alpha=0.1 varying e': [(0, 0.1), (0.05, 0.1), (0.1, 0.1), (0.5, 0.1), (0.9, 0.1)],
+        'e=0.1 varying alpha': [(0.1, 0.1), (0.1, 0.2), (0.1, 0.3), (0.1, 0.4), (0.1, 0.5)]
     }
 
     for part in values:
 
-        figure,plot = plt.subplots()
-        plot.grid(True, color = "k")
+        figure, plot = plt.subplots()
+        plot.grid(True, color="k")
         plot.set_ylabel('Discounted Reward')
         plot.set_xlabel('No of episodes')
-        
+
         plot.set_title(part)
         figure.canvas.set_window_title(part)
 
         for trial in range(5):
-            
+
             e = values[part][trial][0]
             alpha = values[part][trial][1]
-            print('\n\nEpsilon = ',e, 'Alpha = ',alpha,'\n')
+            print('\n\nEpsilon = ', e, 'Alpha = ', alpha, '\n')
 
             rewards = []
             episodes = []
@@ -966,8 +1005,8 @@ def quesB4():
             n = 0
             for i in range(10):
 
-                print('[LEARNING with N = ',n,']')
-                P = rl.Qlearning_E(e=e,alpha=alpha) 
+                print('[LEARNING with N = ', n, ']')
+                P = rl.Qlearning_E(e=e, alpha=alpha)
                 episodes.append(n)
                 n += 500
 
@@ -977,18 +1016,20 @@ def quesB4():
                     reward = 0
                     step = 0
                     while(step < 500 and not s.isTerminal()):
-                        s1,r = s.getNext(P.getVal(s))
-                        reward += r*pow(0.99,step)
+                        s1, r = s.getNext(P.getVal(s))
+                        reward += r*pow(0.99, step)
                         s = s1
                         step += 1
                     avg += reward
                 avg = avg/100
                 rewards.append(avg)
 
-            plot.plot(episodes,rewards, colour[trial], markerfacecolor = "c", label = 'e = ' + str(e) + ', a = ' + str(alpha))
+            plot.plot(episodes, rewards, colour[trial], markerfacecolor="c",
+                      label='e = ' + str(e) + ', a = ' + str(alpha))
             plot.legend(loc="lower right")
         # figure.savefig('QB4_' +part[0:part.index('1')+1]+".png")
     plt.show()
+
 
 def quesB5():
     global n
@@ -1001,16 +1042,16 @@ def quesB5():
         step = 0
         reward = 0
         while(step < 500 and not s.isTerminal()):
-            s1,r = s.getNext(Ps[d].getVal(s))
-            reward += r*pow(0.99,step)
+            s1, r = s.getNext(Ps[d].getVal(s))
+            reward += r*pow(0.99, step)
             s = s1
             step += 1
         return reward
 
-
     Ps = []
     for d in range(len(M2.depots)):
-        Ps.append(rl.Qlearning_D(0.1,dest=M2.itod(d)))
+
+        Ps.append(rl.Qlearning_D(0.1, dest=M2.itod(d)))
         print()
 
     avg = 0
@@ -1019,27 +1060,24 @@ def quesB5():
     rr = []
     for i in range(num):
         d = random.randint(0, len(M2.depots)-1)
-        s = randomStartState(M2,M2.itod(d))
+        s = randomStartState(M2, M2.itod(d))
 
         reward = perform(s)
         avg += reward
         rr.append(reward)
 
+    print('\n\nAVERAGE DISCOUNTED REWARD: ', avg/num)
 
-        
-
-    print('\n\nAVERAGE DISCOUNTED REWARD: ',avg/num)
-
-    figure,plot = plt.subplots()
-    plot.plot(rr, label = '(x,y)')
+    figure, plot = plt.subplots()
+    plot.plot(rr, label='(x,y)')
     plt.show()
 
 
-if(len(argv)==1):
-    quesA1b('R','Y','G')
+if(len(argv) == 1):
+    quesA1b('R', 'Y', 'G')
     quesA2a()
     quesA2b()
-    quesA2C(M1,'R','Y','G')
+    quesA2C(M1, 'R', 'Y', 'G')
     quesA3b()
     quesB2()
     quesB3()
@@ -1048,31 +1086,28 @@ if(len(argv)==1):
 
 else:
     ques = argv[1]
-    if(ques=='A'):
+    if(ques == 'A'):
         spart = int(argv[2])
-        if(spart==1):
-            quesA1b('R','Y','G')
-        if(spart==2):
+        if(spart == 1):
+            quesA1b('R', 'Y', 'G')
+        if(spart == 2):
             sspart = argv[3]
-            if(sspart=='a'):
+            if(sspart == 'a'):
                 quesA2a()
-            elif(sspart=='b'):
+            elif(sspart == 'b'):
                 quesA2b()
             else:
-                quesA2C(M1,'R','Y','G')
+                quesA2C(M1, 'R', 'Y', 'G')
         else:
             quesA3b()
 
     else:
         spart = int(argv[2])
-        if(spart==2):
+        if(spart == 2):
             quesB2()
-        elif(spart==3):
+        elif(spart == 3):
             quesB3()
-        elif(spart==4):
+        elif(spart == 4):
             quesB4()
         else:
             quesB5()
-
-    
-
