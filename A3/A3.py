@@ -1009,7 +1009,7 @@ def quesB5():
 
     Ps = []
     for d in range(len(M2.depots)):
-        Ps.append(rl.Qlearning_D(0.2,dest=M2.itod(d)))
+        Ps.append(rl.Qlearning_D(0.1,dest=M2.itod(d)))
         print()
 
     avg = 0
@@ -1035,12 +1035,15 @@ def quesB5():
 
 
 if(len(argv)==1):
+    quesA1b('R','Y','G')
     quesA2a()
     quesA2b()
     quesA2C(M1,'R','Y','G')
     quesA3b()
     quesB2()
     quesB3()
+    quesB4()
+    quesB5()
 
 else:
     ques = argv[1]
