@@ -564,10 +564,12 @@ class RL:
         self.map = map
         State.map = map
 
-    def getRandomState(self):
+    def getRandomState(self, dest=None):
         x1 = random.randint(0, self.map.width-1)
         y1 = random.randint(0, self.map.height-1)
-        d = self.map.itod(random.randint(1, len(self.map.depots))-1)
+        d = dest
+        if(dest == None):
+            d = self.map.itod(random.randint(1, len(self.map.depots))-1)
         p = d
         while p == d:
             p = self.map.itod(random.randint(1, len(self.map.depots))-1)
@@ -575,7 +577,7 @@ class RL:
 
 
     # Generalised learning that can perform any learning specified in question (by changing parameters)
-    def generalLearning(self, e, isE_Greedy, isQ, alpha=0.25, gamma=0.99, maxLen = None):
+    def generalLearning(self, e, isE_Greedy, isQ, alpha=0.25, gamma=0.99, dest = None):
 
         Q = Table(self.map, 'Q')
         actions = ['N', 'S', 'W', 'E', 'PICK', 'DROP']
@@ -604,7 +606,7 @@ class RL:
                 return random.randint(0, 5)
 
         def QLearning(policy, it):
-            s = self.getRandomState()
+            s = self.getRandomState(dest)
             while(not s.isTerminal()):
                 a = policy(s, e, it)
                 s1, r = s.getNext(actions[a])
@@ -614,7 +616,7 @@ class RL:
                 s = s1         
 
         def SARSA(policy, it):
-            s = self.getRandomState()
+            s = self.getRandomState(dest)
             a = policy(s, e, it)
             while(not s.isTerminal()):
                 s1, r = s.getNext(actions[a])
@@ -642,22 +644,22 @@ class RL:
 
             print('Iteration', _, end='\r')
 
-        print()
+        # print()
         return Q.QtoP()
 
 #    Utilise thsese Q table as per output format
 
-    def Qlearning_E(self, e, alpha=0.25, maxLen = None):
-        return self.generalLearning(e, True, True, alpha, maxLen= maxLen)
+    def Qlearning_E(self, e, alpha=0.25, dest = None):
+        return self.generalLearning(e, True, True, alpha, dest= dest)
 
-    def Qlearning_D(self, e, alpha=0.25, maxLen = None):
-        return self.generalLearning(e, False, True, alpha, maxLen= maxLen)
+    def Qlearning_D(self, e, alpha=0.25, dest = None):
+        return self.generalLearning(e, False, True, alpha, dest= dest)
 
-    def SARSA_E(self, e, alpha=0.25, maxLen = None):
-        return self.generalLearning(e, True, False, alpha, maxLen= maxLen)
+    def SARSA_E(self, e, alpha=0.25, dest = None):
+        return self.generalLearning(e, True, False, alpha, dest= dest)
 
-    def SARSA_D(self, e, alpha=0.25, maxLen = None):
-        return self.generalLearning(e, False, False, alpha, maxLen= maxLen)
+    def SARSA_D(self, e, alpha=0.25, dest = None):
+        return self.generalLearning(e, False, False, alpha, dest= dest)
 
 
 walls1 = {
@@ -846,7 +848,7 @@ def quesB2():
 
             avg = 0
             for ep in range(10):
-                s = rl.getRandomState(M1)
+                s = rl.getRandomState()
                 reward = 0
                 step = 0
                 while(step < 500 and not s.isTerminal()):
@@ -895,12 +897,90 @@ def quesB3():
         print('RUNNING ON INSTANCE',i+1)
         perform(s)
 
-# quesA2a()
-# quesA2b()
-# quesA3b()
-# quesA2C(M1,'R','Y','G')
-# quesB2()
-# quesB3()
+def quesB4():
+
+    print('\n\n-----------RUNNING QUES B.4--------------\n\n')
+
+    global n
+    rl = RL(M1)
+
+    colour = ['b', 'g', 'r', 'c', 'm']
+    # (e,alpha)
+    values = {
+        'alpha=0.1 varying e' : [(0,0.1), (0.05,0.1), (0.1,0.1), (0.5,0.1), (0.9,0.1)],
+        'e=0.1 varying alpha' : [(0.1,0.1), (0.1,0.2), (0.1,0.3), (0.1,0.4), (0.1,0.5)]
+    }
+
+    for part in values:
+
+        figure,plot = plt.subplots()
+        plot.grid(True, color = "k")
+        plot.set_ylabel('Discounted Reward')
+        plot.set_xlabel('No of episodes')
+        
+        plot.set_title(part)
+        figure.canvas.set_window_title(part)
+
+        for trial in range(5):
+            
+            e = values[part][trial][0]
+            alpha = values[part][trial][1]
+            print('\n\nEpsilon = ',e, 'Alpha = ',alpha,'\n')
+
+            rewards = []
+            episodes = []
+
+            n = 0
+            for i in range(10):
+
+                print('[LEARNING with N = ',n,']')
+                P = rl.Qlearning_E(e=e,alpha=alpha) 
+                episodes.append(n)
+                n += 500
+
+                avg = 0
+                for ep in range(10):
+                    s = rl.getRandomState()
+                    reward = 0
+                    step = 0
+                    while(step < 500 and not s.isTerminal()):
+                        s1,r = s.getNext(P.getVal(s))
+                        reward += r*pow(0.99,step)
+                        s = s1
+                        step += 1
+                    avg += reward
+                avg = avg/10
+                rewards.append(avg)
+
+            plot.plot(episodes,rewards, colour[trial], markerfacecolor = "c", label = 'e = ' + str(e) + ', a = ' + str(alpha))
+            plot.legend(loc="bottom right")
+        figure.savefig('QB4_' +part[0:part.index('1')+1]+".png")
+    plt.show()
+
+def quesB5():
+    global n
+
+    n = 10000
+
+    rl = RL(M2)
+    avg = 0
+    for i in range(5):
+        
+        dest = M2.itod(random.randint(1, len(M2.depots))-1)
+        P = rl.SARSA_D(0.1,dest=dest)
+        s = rl.getRandomState(dest)
+        step = 0
+        reward = 0
+        while(step < 500 and not s.isTerminal()):
+            s1,r = s.getNext(P.getVal(s))
+            reward += r*pow(0.99,step)
+            s = s1
+            step += 1
+        avg += reward
+
+        print()
+    print('\n\nAVERAGE DISCOUNTED REWARD: ',avg/5)
+
 
 if(len(argv)==1):
     quesA2a()
@@ -931,6 +1011,10 @@ else:
             quesB2()
         elif(spart==3):
             quesB3()
+        elif(spart==4):
+            quesB4()
+        else:
+            quesB5()
 
     
 
