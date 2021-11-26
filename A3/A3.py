@@ -364,6 +364,7 @@ class MDP:
                             delta = update(s, delta)
                             if(type(delta) == bool and delta):
                                 changed = True
+                        # else iterate over both taxipos and passenger pos
                         else:
                             for x2 in range(self.map.width):
                                 for y2 in range(self.map.height):
@@ -376,60 +377,58 @@ class MDP:
         return (delta, changed)
 
     # Performs value iteration
-    # TODO: have to add max-norm using epsilon
     def valueIteration(self, e, gamma=0.9):
 
+        # table containing the utilities of the state
         V = Table(self.map, 'VALUE')
+        # table containing the policy of the state space
         P = Table(self.map, 'POLICY')
 
         delta = 10
         i = 0
 
+        # bellamn ford update for the value iteration updates
         def update(s, delta):
 
             maxx = self.update(gamma, s, V)
 
-            # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None):
-                # print(V[x1][y1][x2][y2][p][d],maxx[0])
                 change = abs(maxx[0] - V.getVal(s))
                 V.setVal(s, maxx[0])
                 P.setVal(s, maxx[1])
                 delta = max(change, delta)
-                # print('LOL',P[x1][y1][x2][y2][p][d])
             return delta
 
         # ---------------------------------------------------------------------------------------
-
+        # iteration using the max norm distance as the convergence criterion
         while delta >= (1-gamma)*e/gamma:
 
             delta = self.iterate(update)[0]
             i += 1
-            # print('Iteration', i, delta, end='\r')
-
-        # P.printVal()
         return P, i
 
+    # implmentation of the policy iteration
     def policyIteration(self, e, gamma=0.9):
+        # table containing the utilities of the state
         V = Table(self.map, 'VALUE')
+        # table containing the policy of the state space
         P = Table(self.map, 'POLICY')
-        global policyE
+        global policyE  # array conating the sum of utilities of the state used for policy loss
 
         delta = 10
         i = 0
         flag = True
 
+        # updates for the policy convergence step in the iteration
         def update(s, delta):
             a = P.getVal(s)
             neigh = s.getNeighbours(a)
-            # print(a,len(neigh))
             if(len(neigh) > 0):
                 curr = 0
                 for s1 in neigh:
                     t = self.T(s, a, s1)
 
                     if(t > 0):
-                        # print(s.taxiPos,s.passengerPos,s.picked,s.dest, a,'=>', s1.taxiPos,s1.passengerPos,s1.picked,s1.dest, self.R(s, a, s1),t, t*(self.R(s, a, s1) + gamma*V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)]),V[s1.taxiPos[0]][s1.taxiPos[1]][s1.passengerPos[0]][s1.passengerPos[1]][s1.picked][self.map.dtoi(s1.dest)])
                         curr += t*(s.R(a, s1) + gamma*V.getVal(s1))
                 change = abs(curr - V.getVal(s))
                 V.setVal(s, curr)
@@ -437,6 +436,7 @@ class MDP:
                     delta = change
             return delta
 
+        # updates for the policy improvement step in the iterartion
         def updateP(s, delta=0):
             boolV = False
             maxx = self.update(gamma, s, V)
@@ -447,7 +447,8 @@ class MDP:
                 boolV = True
             return boolV
 
-        # ---------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------------------------#
+        # the loop of the policy iteration run till theere is change in the policy
         while flag:
 
             # policy evaluation phase
@@ -455,6 +456,7 @@ class MDP:
             delta = 10
             while delta >= (1-gamma)*e/gamma:
                 delta = self.iterate(update)[0]
+            # add the new sum of utility
             policyE.append(V.summ())
             # policy improvement phase
             flag = self.iterate(updateP)[1]
@@ -463,31 +465,37 @@ class MDP:
             print('Iteration', i, end='\r')
         # P.printVal()
 
+    # function for the policy iteration using the linear algebra
+
     def policyIteration_l(self, gamma=0.99):
         w = self.map.width
         h = self.map.height
         de = len(self.map.depots)
+        # table containing the utilities of the state
         V = Table(self.map, 'VALUE')
+        # table containing the policy of the state space
         P = Table(self.map, 'POLICY')
         changed = True
         i = 0
 
+        # policy updates
         def updateP(s, delta=0):
             boolV = False
             maxx = self.update(gamma, s, V)
-            # print(s.taxiPos,s.passengerPos,s.picked, s.dest, maxx,'\n')
             if(maxx != None and maxx[1] != P.getVal(s)):
                 P.setVal(s, maxx[1])
                 boolV = True
             return boolV
 
         # ---------------------------------------------------------------------------------------
+        # loop of the policy iteration
         while changed:
 
-            matrix = []
-            const = []
+            matrix = []  # matrix for the set of linear equation ie coeficients
+            const = []  # the constant value of the linear equation
             changed = False
-
+            # creating the matric of the linear equation
+            # case when picked is True
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for d in range(len(self.map.depots)):
@@ -516,7 +524,7 @@ class MDP:
                         else:
                             const.append(0)
                         matrix.append(temp)
-
+            # case when picked is false
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for x2 in range(self.map.width):
@@ -548,13 +556,14 @@ class MDP:
                                 else:
                                     const.append(0)
                                 matrix.append(temp)
-            # print(matrix)
+            # solve the linear equation usinf linear algebra solvers
             ans = np.linalg.solve(np.array(matrix), np.array(const))
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for d in range(len(self.map.depots)):
                         s = State((x1, y1), (x1, y1), True, self.map.itod(d))
                         V.setVal(s, ans[x1*h*de+y1*de+d])
+            # extract back the values to the table
             for x1 in range(self.map.width):
                 for y1 in range(self.map.height):
                     for x2 in range(self.map.width):
@@ -564,15 +573,17 @@ class MDP:
                                           False, self.map.itod(d))
                                 V.setVal(
                                     s, ans[w*h*de + x1*h*w*h*de+y1*w*h*de+x2*h*de+y2*de+d])
-
+            # Now perform the policy iteration
             changed = self.iterate(updateP)[1]
             i += 1
             print('Iteration', i, end='\r')
-        P.printVal()
+        # P.printVal()
 
 
 # Change this value for number of episodes in learning
 n = 50000
+
+# class for the reinforcmenet learning
 
 
 class RL:
@@ -680,6 +691,7 @@ class RL:
         return self.generalLearning(e, False, False, alpha, dest=dest)
 
 
+# walls for the Part A
 walls1 = {
     (0, 0): {(1, 0): True},
     (0, 1): {(1, 1): True},
@@ -689,13 +701,14 @@ walls1 = {
     (2, 1): {(3, 1): True}
 }
 
+# depots for the Part A
 depots1 = {
     'Y': (0, 0),
     'R': (0, 4),
     'B': (3, 0),
     'G': (4, 4)
 }
-
+# walls for the Part B
 walls2 = {
     (0, 0): {(1, 0): True},
     (0, 1): {(1, 1): True},
@@ -728,6 +741,7 @@ walls2 = {
     (7, 9): {(8, 0): True},
 }
 
+# depots for the Part B
 depots2 = {
     'Y': (0, 1),
     'R': (0, 9),
@@ -1035,11 +1049,8 @@ def quesB5():
 
     Ps = []
     for d in range(len(M2.depots)):
-<<<<<<< HEAD
-        Ps.append(rl.Qlearning_D(0.2, dest=M2.itod(d)))
-=======
-        Ps.append(rl.Qlearning_D(0.1,dest=M2.itod(d)))
->>>>>>> 2470606c6cd876ebd5a7a883ae0debe326e1771f
+
+        Ps.append(rl.Qlearning_D(0.1, dest=M2.itod(d)))
         print()
 
     avg = 0
@@ -1061,12 +1072,8 @@ def quesB5():
     plt.show()
 
 
-<<<<<<< HEAD
 if(len(argv) == 1):
-=======
-if(len(argv)==1):
-    quesA1b('R','Y','G')
->>>>>>> 2470606c6cd876ebd5a7a883ae0debe326e1771f
+    quesA1b('R', 'Y', 'G')
     quesA2a()
     quesA2b()
     quesA2C(M1, 'R', 'Y', 'G')
