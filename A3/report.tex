@@ -26,6 +26,7 @@ We have created an MDP for the Taxi Domain formulation as described in the probl
 \textbf{State Space:\\}
 We have created a class for the state. Each state in Taxi Driver MDP has four identifying features: the position of the taxi, position of the passenger,a boolean variable picked denoting whether passenger is picked by the taxi, and the destination. These are the variable describing the state.\\
 Now the x position can take discrete values up to the width, y position can take up to the height. So the total number of values position of passenger and position of taxi can take is height*width. But when the boolean value of picked is true then position of taxi and passenger is same. And destination variable takes values equal to the number of depots. \\
+
 So that makes the total number of variables to be :- \\
 $w*h*w*h*d+w*h*d$\\ where,\\
 h = height of map\\
@@ -69,16 +70,36 @@ So state is $((x_1,y_1),(x_2,y_2),p,d)$ where $(x_1,y_1) = (x_2,y_2)$ if p is Tr
 
 \subsection{Implementing Value Iteration for the Taxi Domain:}
 \begin{enumerate}[a)]
-    \item We implemented the value iteration in our code inside valueIteration() function in the MDP class. The value iteration took epsilon as the input. Also, the default value of $\gamma$ is set to be 0.9 but can be changed as specified. For the epsilon value of 0.1, the number of iteration the code took to converge is 15.
+    \item We implemented the value iteration using max-norm distance in our code inside valueIteration() function in the MDP class. The value iteration took $\epsilon$ as the input. Also, the default value of $\gamma$ is set to be 0.9 but can be changed as specified.\\
+    Answer to question asked in assignment:- 
+    \begin{itemize}
+        \item $\epsilon = $ 0.1 
+        \item Number of iterations = 20
+    \end{itemize}
+    
+    For the $\epsilon$ value of 0.1, the number of iteration the code took to converge is 20. We first tested our code different values of $\epsilon$ and following are the results of it:- 
+    \begin{center}
+        \begin{figure}[H]
+        \hfill\includegraphics[width=9cm]{QA2a.png}\hspace*{\fill}
+        \caption{Epsilon vs iteration Index}
+        \label{fig:Epsilon vs iteration Index}
+    \end{figure}
+    \end{center}
+    
+    
     \item The plot of Max-norm distance vs Iteration index is given as follow: (The discount factors are given in the range [0.01,0.1,0.5,0.8,0.99] in that order)
     \begin{center}
         \begin{figure}[H]
-\hfill\includegraphics[width=9cm]{QA2b.png}\hspace*{\fill}
+        \hfill\includegraphics[width=9cm]{QA2b.png}\hspace*{\fill}
         \caption{Max Norm distance vs iteration Index}
         \label{fig:Max Norm distance vs iteration Index}
-\end{figure}
-\end{center}
+    \end{figure}
+    \end{center}
+    We used $\epsilon$ to be 0.1 in this part also.
+
+
     The max-norm distance is the amount of error we can incoperated in the values, that in a sense signifies the maximum difference from the optimal value. So as the number of iteration of convergence is increasing we are coming more and more close to the optimal value. Our estimates are improving further and further as we increase the number of iterations, hence the max-norm distance decreases. \\
+    
     One another way to look at it is that as the max-norm distance decreases, the estimate value must be close to the optimal value itself, hence the number of iteration of convergence is more. 
     \item In this part we were asked to simulate the policy obtained using the value iteration once with $\gamma$ 0.1 and then with 0.99 with bound of 20 steps. Following are the results:- 
     
@@ -94,8 +115,10 @@ So state is $((x_1,y_1),(x_2,y_2),p,d)$ where $(x_1,y_1) = (x_2,y_2)$ if p is Tr
 \begin{enumerate}[a)]
     \item To implement the policy evaluation step, we have two options; one is the exact method in which we create linear equations in variables equal to the number of the total state and get the exact utility value of the various states. The other is the approximate method which runs an update on the states until the value converges.
 The first method mentioned is called Linear Algebra Method, the second one is the Iterative method. We have implemented them both. \\
+
 The linear algebra method takes O($n^3$) time for policy evaluation, where n is the number of states. If the transition model given to us is sparse, meaning that each state transition leads to only a small number of states, then the Linear algebra method is preferred because then the solution is obtained faster. The linear Algebra method is preferred when our state space is small. For larger state space, O($n^3$) becomes too much overhead, so iterative method is preferred
-    \item The graph comes out as following for different values of the discount factor.
+    \pagebreak
+\item The graph comes out as following for different values of the discount factor.
     \begin{center}
         \begin{figure}[h]
 \hfill\includegraphics[height=6.5cm]{QA3b.png}\hspace*{\fill}
@@ -111,17 +134,18 @@ The linear algebra method takes O($n^3$) time for policy evaluation, where n is 
 
 \subsection{Implementing the approaches to learn the optimal policy:}
 In this part we had to implement the Q learning and SARSA reinforcement learning techniques with different exploration methods.\\
-For doing that we made a general function that on changing parameter becomes required algorithm. This function takes epsilon and alpha as
+For doing that we made a general function that on changing parameter becomes required algorithm. This function takes $\epsilon$ and $\alpha$ as
 parameters and learns the optimal Q table. Initially we started with Q table with all values 0 and performed n number of iterations of episodes. In 
 each episode, starting from a random state we keep on moving to next state by performing action depending upon exploration technique and updating Q value depending on
 algorithm (Q learning or SARSA) by using the reward got upon performing that action untill we reached terminal state. \\
 
 Learning techniques:- 
 \begin{itemize}
-    \item \textbf{Q learning: }  This is an online algorithm, where Q table is updated using the following formula:- 
-        $ $
-    \item \textbf{SARSA: }  This is an offline algorithm, where Q table is updated using the following formula:- 
-        $ $
+    \item \textbf{Q learning: }  This is an off policy algorithm, where Q table is updated using the following formula:-\\ 
+        $ Q(s,a) = (1-\alpha)Q(s,a) + \alpha(R(s,a,s') + \gamma max_{a'}Q(s',a'))$
+    \item \textbf{SARSA: }  This is an on policy algorithm, where Q table is updated using the following formula:- \\
+    $ Q(s,a) = (1-\alpha)Q(s,a) + \alpha(R(s,a,s') + \gamma Q(s',a'))$\\
+    where $a'$ is some random action from $s'$\\
 \end{itemize}
 
 Exploration techniques:- 
@@ -139,37 +163,22 @@ Following are the results:-
 
 \begin{center}
     \begin{figure}[H]
-    \hfill\includegraphics[width=9cm]{QB2_QLearning_e-greedy.png}\hspace*{\fill}
-    \caption{QLearning e greedy}
-    \label{fig:QLearning_e-greedy}
+    \hfill\includegraphics[width=9cm]{QB2.png}\hspace*{\fill}
+    \caption{No of episodes VS Discounted Rewards for different Algo}
+    \label{fig:No of episodes VS Discounted Rewards for different Algo}
 \end{figure}
 \end{center}
 
-\begin{center}
-    \begin{figure}[H]
-    \hfill\includegraphics[width=9cm]{QB2_QLearning_exploration-decay.png}\hspace*{\fill}
-    \caption{QLearning exploration decay}
-    \label{fig:QLearning_exploration-decay}
-\end{figure}
-\end{center}
+\textbf{Analysis:\\ }
+Since Q learning is a off policy algorithm, it assumes that greedy policy is followed till now (but infact it is not), and takes the best action availabe, as best action is taken at each state while learning the number of negative rewards are less, whereas SARSA is an on 
+policy, i.e. it takes some random action for updating its Q table. But by doing so in the learning process there are more negative rewards in it. So, initially when we let the agent train for less number of iterations we can see Q leaning approaching to more positive rewards faster than 
+SARSA (both the approaches of exploration).\\
 
-\begin{center}
-    \begin{figure}[H]
-    \hfill\includegraphics[width=9cm]{QB2_SARSA_e-greedy.png}\hspace*{\fill}
-    \caption{SARSA e greedy}
-    \label{fig:SARSA_e-greedy}
-\end{figure}
-\end{center}
+Now, coming to the choice of exploration technique, $\epsilon$ greedy simply takes random state with probability of $\epsilon$ at each point of the training, but ideally we should focus on exploitation of current policy once we have explored most of the states (i.e. in the later part of training), 
+that is what is done in exploitation decay. In our implementation, exploration decays with the factor of $\sqrt{i}$ where i is number of states agent have been so far (repeated counting allowed). So, as evident from graph exploration decay version of both Q learning and SARSA converge to positive rewards faster than 
+their $\epsilon-$greedy versions.\\
 
-\begin{center}
-    \begin{figure}[H]
-    \hfill\includegraphics[width=9cm]{QB2_SARSA_exploration-decay.png}\hspace*{\fill}
-    \caption{SARSA exploration decay}
-    \label{fig:SARSA_exploration-decay}
-\end{figure}
-\end{center}
-
-\textbf{Analysis: }
+So combining both the effects Q learning with exploration decay is the best algorithm (same can be seen in graph, it converges fastest).  
 
 
 \subsection{Execution using learned policy:}
@@ -182,11 +191,11 @@ we simulated the episode using learned actions. This is done on 5 random start s
     \item But taxi is able to overcome that probabilistic behaviour and able to perform optimally from any given state.
 \end{itemize}
 
-\subsection{Analysing effect on policy by changing epsilon and alpha:}
-In this we needed to plot graph of part 3 by changing alpha and epsilon for Q learning with e-greedy. Following are the results:- 
+\subsection{Analysing effect on policy by changing $\epsilon$ and $\alpha$:}
+In this we needed to plot graph of part 3 by changing $\alpha$ and $\epsilon$ for Q learning with e-greedy. Following are the results:- 
 
 \begin{enumerate}
-    \item \textbf{alpha = 0.1 and varying epsilon: }
+    \item \textbf{$\alpha$ = 0.1 and varying $\epsilon$: }
     
     \begin{center}
         \begin{figure}[H]
@@ -196,12 +205,12 @@ In this we needed to plot graph of part 3 by changing alpha and epsilon for Q le
     \end{figure}
     \end{center}
 
-    It can be seen from the graph that as epsilon is increased, rewards converges in lesser number of iterations. This is quite imperative as 
-    epsilon is the probability with which we are exploring states and as more and more states are observed, changes in Q values from far off state travels 
+    It can be seen from the graph that as $\epsilon$ is increased, rewards converges in lesser number of iterations. This is quite imperative as 
+    $\epsilon$ is the probability with which we are exploring states and as more and more states are observed, changes in Q values from far off state travels 
     faster. But there is a tradeoff in time taken per episode. Since we are giving more priority in exploring than exploiting current state, terminal state is 
     reached in larger time.
 
-    \item \textbf{epsilon = 0.1 and varying alpha: }
+    \item \textbf{$\epsilon$ = 0.1 and varying $\alpha$: }
     
     \begin{center}
         \begin{figure}[H]
@@ -210,6 +219,11 @@ In this we needed to plot graph of part 3 by changing alpha and epsilon for Q le
         \label{fig: epsilon = 0.1 and varying alpha}
     \end{figure}
     \end{center}
+
+    It can be seen from the graph that from $\alpha$ = 0.1 to $\alpha$ = 0.4, convergence in reward is acheived in lesser number of iterations, also fluctuations in reward decreases  (graph moves towards increasing behaviour). But for 
+    $\alpha$ = 0.5, again flutuations can be seen and number of iterations required for convergence increased again. This is because $\alpha$ is the learning factor that is the weight by which we are giving priority to last update compared to value 
+    obtained so far. So initially when $\alpha$ is less, since we give lesser weight to values that we get, reward information is not correctly propagated. Whereas once we have reached the best $\alpha$ (that balances both last update and 
+    previous value) and increase $\alpha$ further then it will also result in poor behaviour because higher $\alpha$ means we are just relying on last update, not on value got till now. So basically $\alpha$ is simply quantifier of value to noise ratio and should be adjusted accordingly.
 
     
 \end{enumerate}
@@ -234,12 +248,10 @@ Also as we have averaged out the result on 500 random episodes, the result is re
 
 \begin{center}
     \begin{figure}[H]
-    \hfill\includegraphics[width=9cm]{instance.png}\hspace*{\fill}
+    \hfill\includegraphics[width=7cm]{instance.png}\hspace*{\fill}
     \caption{Instance having shortest path length = 36 (best reward sum = -17.8)}
     \label{fig: Instance having shortest path length = 36 }
 \end{figure}
 \end{center}
-
-
 \end{enumerate}
 \end{document}

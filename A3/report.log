@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (MiKTeX 21.8) (preloaded format=pdflatex 2021.9.5)  27 NOV 2021 00:05
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (MiKTeX 21.8) (preloaded format=pdflatex 2021.9.5)  27 NOV 2021 01:53
 entering extended mode
 **e:/Semesters/Sem5/COL333/COL333/A3/report.tex
 (e:/Semesters/Sem5/COL333/COL333/A3/report.tex
@@ -97,87 +97,105 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 13.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 13.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 30.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 30.
- [1
 
-{C:/Users/sachi/AppData/Local/MiKTeX/pdftex/config/pdftex.map}]
-<QA2b.png, id=13, 462.528pt x 346.896pt>
-File: QA2b.png Graphic file (type png)
-<use QA2b.png>
-Package pdftex.def Info: QA2b.png  used on input line 76.
-(pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
- [2] [3 <./QA2b.png>]
-<QA3b.png, id=23, 462.528pt x 346.896pt>
-File: QA3b.png Graphic file (type png)
-<use QA3b.png>
-Package pdftex.def Info: QA3b.png  used on input line 101.
-(pdftex.def)             Requested size: 246.59253pt x 184.9429pt.
- [4 <./QA3b.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 113--118
+Underfull \hbox (badness 10000) in paragraph at lines 26--29
 
  []
 
-<QB2_QLearning_e-greedy.png, id=28, 462.528pt x 346.896pt>
-File: QB2_QLearning_e-greedy.png Graphic file (type png)
-<use QB2_QLearning_e-greedy.png>
-Package pdftex.def Info: QB2_QLearning_e-greedy.png  used on input line 142.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 31.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 31.
+[1
+
+{C:/Users/sachi/AppData/Local/MiKTeX/pdftex/config/pdftex.map}]
+<QA2a.png, id=13, 462.528pt x 346.896pt>
+File: QA2a.png Graphic file (type png)
+<use QA2a.png>
+Package pdftex.def Info: QA2a.png  used on input line 83.
 (pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
-[5]
-<QB2_QLearning_exploration-decay.png, id=32, 462.528pt x 346.896pt>
-File: QB2_QLearning_exploration-decay.png Graphic file (type png)
-<use QB2_QLearning_exploration-decay.png>
-Package pdftex.def Info: QB2_QLearning_exploration-decay.png  used on input line 150.
+ [2]
+<QA2b.png, id=19, 462.528pt x 346.896pt>
+File: QA2b.png Graphic file (type png)
+<use QA2b.png>
+Package pdftex.def Info: QA2b.png  used on input line 93.
 (pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
-<QB2_SARSA_e-greedy.png, id=33, 462.528pt x 346.896pt>
-File: QB2_SARSA_e-greedy.png Graphic file (type png)
-<use QB2_SARSA_e-greedy.png>
-Package pdftex.def Info: QB2_SARSA_e-greedy.png  used on input line 158.
+
+Underfull \hbox (badness 10000) in paragraph at lines 101--102
+
+ []
+
+[3 <./QA2a.png> <./QA2b.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 116--118
+
+ []
+
+[4]
+<QA3b.png, id=28, 462.528pt x 346.896pt>
+File: QA3b.png Graphic file (type png)
+<use QA3b.png>
+Package pdftex.def Info: QA3b.png  used on input line 124.
+(pdftex.def)             Requested size: 246.59253pt x 184.9429pt.
+ [5 <./QA3b.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 136--141
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 146--149
+
+ []
+
+<QB2.png, id=33, 462.528pt x 346.896pt>
+File: QB2.png Graphic file (type png)
+<use QB2.png>
+Package pdftex.def Info: QB2.png  used on input line 166.
 (pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
- [6 <./QB2_QLearning_e-greedy.png> <./QB2_QLearning_exploration-decay.png>]
-<QB2_SARSA_exploration-decay.png, id=39, 462.528pt x 346.896pt>
-File: QB2_SARSA_exploration-decay.png Graphic file (type png)
-<use QB2_SARSA_exploration-decay.png>
-Package pdftex.def Info: QB2_SARSA_exploration-decay.png  used on input line 166.
-(pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
- [7 <./QB2_SARSA_e-greedy.png> <./QB2_SARSA_exploration-decay.png>]
-<QB4_alpha=0.1.png, id=46, 462.528pt x 346.896pt>
+[6]
+Underfull \hbox (badness 10000) in paragraph at lines 172--176
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 177--180
+
+ []
+
+[7 <./QB2.png>]
+<QB4_alpha=0.1.png, id=45, 462.528pt x 346.896pt>
 File: QB4_alpha=0.1.png Graphic file (type png)
 <use QB4_alpha=0.1.png>
-Package pdftex.def Info: QB4_alpha=0.1.png  used on input line 193.
+Package pdftex.def Info: QB4_alpha=0.1.png  used on input line 202.
 (pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
  [8 <./QB4_alpha=0.1.png>]
 <QB4_e=0.1.png, id=51, 462.528pt x 346.896pt>
 File: QB4_e=0.1.png Graphic file (type png)
 <use QB4_e=0.1.png>
-Package pdftex.def Info: QB4_e=0.1.png  used on input line 208.
+Package pdftex.def Info: QB4_e=0.1.png  used on input line 217.
 (pdftex.def)             Requested size: 256.0748pt x 192.06375pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 228--229
+ [9 <./QB4_e=0.1.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 242--243
 
  []
 
-[9 <./QB4_e=0.1.png>]
 <instance.png, id=56, 216.81pt x 209.583pt>
 File: instance.png Graphic file (type png)
 <use instance.png>
-Package pdftex.def Info: instance.png  used on input line 237.
-(pdftex.def)             Requested size: 256.0748pt x 247.56801pt.
- [10 <./instance.png>] (report.aux) ) 
+Package pdftex.def Info: instance.png  used on input line 251.
+(pdftex.def)             Requested size: 199.16928pt x 192.54045pt.
+[10 <./instance.png>] [11] (report.aux) ) 
 Here is how much of TeX's memory you used:
- 1408 strings out of 478927
- 22769 string characters out of 2852536
- 321121 words of memory out of 3000000
- 19281 multiletter control sequences out of 15000+600000
+ 1392 strings out of 478927
+ 22001 string characters out of 2852536
+ 321105 words of memory out of 3000000
+ 19267 multiletter control sequences out of 15000+600000
  408020 words of font info for 42 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,6n,66p,525b,462s stack positions out of 5000i,500n,10000p,200000b,80000s
- <C:\Users\sachi\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1000.pk><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on report.pdf (10 pages, 374174 bytes).
+ 57i,6n,66p,543b,466s stack positions out of 5000i,500n,10000p,200000b,80000s
+ <C:\Users\sachi\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1000.pk><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy5.pfb><C:/Users/sachi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
+Output written on report.pdf (11 pages, 393176 bytes).
 PDF statistics:
- 99 PDF objects out of 1000 (max. 8388607)
+ 118 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 46 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 36 words of extra memory for PDF output out of 10000 (max. 10000000)
 
