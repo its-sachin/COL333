@@ -1,4 +1,4 @@
-from math import degrees
+from math import degrees, sqrt
 import random
 import numpy as np
 from numpy.core.fromnumeric import shape
@@ -573,8 +573,7 @@ class RL:
         p = d
         while p == d:
             p = self.map.itod(random.randint(1, len(self.map.depots))-1)
-        return State((x1, y1), self.map.depots[p], False, d)
-
+        return State((x1,y1),self.map.depots[p], False, d)
 
     # Generalised learning that can perform any learning specified in question (by changing parameters)
     def generalLearning(self, e, isE_Greedy, isQ, alpha=0.25, gamma=0.99, dest = None):
@@ -600,7 +599,7 @@ class RL:
         def decay(s, e, it):
             prob = random.uniform(0, 1)
             # TODO: Can change this decay function
-            if(prob > e/it):
+            if(prob > e/sqrt(it)):
                 return getBest(s)
             else:
                 return random.randint(0, 5)
@@ -726,6 +725,36 @@ depots2 = {
 M1 = Map(5, 5, walls1, depots1)
 M2 = Map(10, 10, walls2, depots2)
 
+def randomStartState(m:Map,dest = None):
+    t = m.itod(random.randint(1, len(m.depots))-1)
+    d = dest
+    if(dest == None):
+        d = m.itod(random.randint(1, len(m.depots))-1)
+    p = d
+    while p == d:
+        p = m.itod(random.randint(1, len(m.depots))-1)
+    return State(m.depots[t],m.depots[p], False, d)
+
+def quesA1b(t,p,d):
+
+    print('\n\n-----------RUNNING QUES A.1.b--------------\n\n')
+    s = State(M1.depots[t],M1.depots[p],False,d)
+    State.map = M1
+    actions = ['PICK','DROP','N','S','W','E']
+
+    while True:
+
+        print('STATE: ',s.taxiPos,s.passengerPos,s.picked,s.dest)
+        a = input('\nACTION: ')
+        if(a not in actions):
+            if(a=='STOP'):
+                break
+            print('INVALID ACTION')
+        else:
+            s1,r = s.getNext(a)
+            print('REWARD: ',r)
+        s = s1
+
 
 def quesA2a():
 
@@ -820,6 +849,8 @@ def quesA3b():
     plt.legend(rng, loc="lower right")
     plt.show()
 
+
+# ------------------------------------------------------------------------
 def quesB2():
 
     print('\n\n-----------RUNNING QUES B.2--------------\n\n')
@@ -847,7 +878,7 @@ def quesB2():
             n += 500
 
             avg = 0
-            for ep in range(10):
+            for ep in range(100):
                 s = rl.getRandomState()
                 reward = 0
                 step = 0
@@ -857,7 +888,7 @@ def quesB2():
                     s = s1
                     step += 1
                 avg += reward
-            avg = avg/10
+            avg = avg/100
             rewards.append(avg)
 
         figure,plot = plt.subplots()
@@ -868,6 +899,7 @@ def quesB2():
         plot.set_xlabel('No of episodes')
         figure.canvas.set_window_title(algos[algo])
         # figure.savefig('QB2_' + algos[algo]+".png")
+        print()
     plt.show()
 
 def quesB3():
@@ -893,7 +925,7 @@ def quesB3():
         print('-----------------SIMUALTION ENDED ------------------\n\n')
 
     for i in range(5):
-        s = rl.getRandomState()
+        s = randomStartState(M1)
         print('RUNNING ON INSTANCE',i+1)
         perform(s)
 
@@ -939,7 +971,7 @@ def quesB4():
                 n += 500
 
                 avg = 0
-                for ep in range(10):
+                for ep in range(100):
                     s = rl.getRandomState()
                     reward = 0
                     step = 0
@@ -949,12 +981,12 @@ def quesB4():
                         s = s1
                         step += 1
                     avg += reward
-                avg = avg/10
+                avg = avg/100
                 rewards.append(avg)
 
             plot.plot(episodes,rewards, colour[trial], markerfacecolor = "c", label = 'e = ' + str(e) + ', a = ' + str(alpha))
-            plot.legend(loc="bottom right")
-        figure.savefig('QB4_' +part[0:part.index('1')+1]+".png")
+            plot.legend(loc="lower right")
+        # figure.savefig('QB4_' +part[0:part.index('1')+1]+".png")
     plt.show()
 
 def quesB5():
@@ -963,23 +995,43 @@ def quesB5():
     n = 10000
 
     rl = RL(M2)
-    avg = 0
-    for i in range(5):
-        
-        dest = M2.itod(random.randint(1, len(M2.depots))-1)
-        P = rl.SARSA_D(0.1,dest=dest)
-        s = rl.getRandomState(dest)
+
+    def perform(s):
         step = 0
         reward = 0
         while(step < 500 and not s.isTerminal()):
-            s1,r = s.getNext(P.getVal(s))
+            s1,r = s.getNext(Ps[d].getVal(s))
             reward += r*pow(0.99,step)
             s = s1
             step += 1
-        avg += reward
+        return reward
 
+
+    Ps = []
+    for d in range(len(M2.depots)):
+        Ps.append(rl.Qlearning_D(0.2,dest=M2.itod(d)))
         print()
-    print('\n\nAVERAGE DISCOUNTED REWARD: ',avg/5)
+
+    avg = 0
+    num = 500
+
+    rr = []
+    for i in range(num):
+        d = random.randint(0, len(M2.depots)-1)
+        s = randomStartState(M2,M2.itod(d))
+
+        reward = perform(s)
+        avg += reward
+        rr.append(reward)
+
+
+        
+
+    print('\n\nAVERAGE DISCOUNTED REWARD: ',avg/num)
+
+    figure,plot = plt.subplots()
+    plot.plot(rr, label = '(x,y)')
+    plt.show()
 
 
 if(len(argv)==1):
@@ -994,6 +1046,8 @@ else:
     ques = argv[1]
     if(ques=='A'):
         spart = int(argv[2])
+        if(spart==1):
+            quesA1b('R','Y','G')
         if(spart==2):
             sspart = argv[3]
             if(sspart=='a'):
