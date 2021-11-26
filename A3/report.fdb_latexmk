@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1637931616 "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" "report.pdf" "report" 1637931617
+["pdflatex"] 1637935105 "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" "report.pdf" "report" 1637935107
   "C:/Users/sachi/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1000.pk" 1630836279 11548 90f32ca402142a3a5a46501564b29aef ""
   "C:/Users/sachi/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1630834124 9715383 3f3e24fb5183498c2db26a3dc7a74ee7 ""
   "C:/Users/sachi/AppData/Local/MiKTeX/pdftex/config/pdftex.map" 1635350063 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
@@ -47,9 +47,9 @@
   "QB2_SARSA_exploration-decay.png" 1637929199 23966 5dde236da98b20593e211c0c7b91f232 ""
   "QB4_alpha=0.1.png" 1637904145 45123 8bbd0fb3c6e1d41a81131da5004ff807 ""
   "QB4_e=0.1.png" 1637904340 56231 f2c25d63b244085ba70f345aca4ed01e ""
-  "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" 1637931614 13334 041e5dcf070415e92f87a6b9b873397e ""
-  "report.aux" 1637931617 2609 47eb9846fdde337c52d909ddc444adcb "pdflatex"
-  "report.tex" 1637931614 13334 041e5dcf070415e92f87a6b9b873397e ""
+  "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" 1637935104 13657 fc91d85c6c8faefe9ad516a0ba82de7a ""
+  "report.aux" 1637935106 2609 47eb9846fdde337c52d909ddc444adcb "pdflatex"
+  "report.tex" 1637935104 13657 fc91d85c6c8faefe9ad516a0ba82de7a ""
   (generated)
   "report.aux"
   "report.pdf"

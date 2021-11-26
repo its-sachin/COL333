@@ -637,8 +637,7 @@ class RL:
             while(not s.isTerminal()):
                 a = policy(s, e, it)
                 s1, r = s.getNext(actions[a])
-                val = (1-alpha)*Q.getVal(s, a) + alpha * \
-                    (r + gamma*Q.getVal(s1, getBest(s1)))
+                val = (1-alpha)*Q.getVal(s, a) + alpha * (r + gamma*Q.getVal(s1, getBest(s1)))
                 Q.setVal(s, val, a)
                 # print(s.taxiPos,s.passengerPos,s.picked,s.dest,'[Action: ',actions[a],']->',s1.taxiPos,s1.passengerPos,s1.picked,s1.dest,'[Reward',r,']')
                 s = s1
@@ -649,8 +648,7 @@ class RL:
             while(not s.isTerminal()):
                 s1, r = s.getNext(actions[a])
                 a1 = policy(s1, e, it)
-                val = (1-alpha)*Q.getVal(s, a) + alpha * \
-                    (r + gamma*Q.getVal(s1, a1))
+                val = (1-alpha)*Q.getVal(s, a) + alpha * (r + gamma*Q.getVal(s1, a1))
                 Q.setVal(s, val, a)
                 # print(s.taxiPos,s.passengerPos,s.picked,s.dest,'[Action: ',actions[a],']->',s1.taxiPos,s1.passengerPos,s1.picked,s1.dest,'[Reward',r,']')
                 s = s1
@@ -979,7 +977,7 @@ def quesB4():
     colour = ['b', 'g', 'r', 'c', 'm']
     # (e,alpha)
     values = {
-        'alpha=0.1 varying e': [(0, 0.1), (0.05, 0.1), (0.1, 0.1), (0.5, 0.1), (0.9, 0.1)],
+        # 'alpha=0.1 varying e': [(0, 0.1), (0.05, 0.1), (0.1, 0.1), (0.5, 0.1), (0.9, 0.1)],
         'e=0.1 varying alpha': [(0.1, 0.1), (0.1, 0.2), (0.1, 0.3), (0.1, 0.4), (0.1, 0.5)]
     }
 
@@ -1011,8 +1009,9 @@ def quesB4():
                 n += 500
 
                 avg = 0
-                for ep in range(10):
-                    s = rl.getRandomState()
+                for ep in range(100):
+                    # s = rl.getRandomState()
+                    s = randomStartState(M1)
                     reward = 0
                     step = 0
                     while(step < 500 and not s.isTerminal()):
@@ -1021,7 +1020,7 @@ def quesB4():
                         s = s1
                         step += 1
                     avg += reward
-                avg = avg/10
+                avg = avg/100
                 rewards.append(avg)
 
             plot.plot(episodes, rewards, colour[trial], markerfacecolor="c",
