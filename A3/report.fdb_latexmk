@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1637958186 "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" "report.pdf" "report" 1637958187
+["pdflatex"] 1637989194 "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" "report.pdf" "report" 1637989195
   "C:/Users/sachi/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1000.pk" 1630836279 11548 90f32ca402142a3a5a46501564b29aef ""
   "C:/Users/sachi/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1630834124 9715383 3f3e24fb5183498c2db26a3dc7a74ee7 ""
   "C:/Users/sachi/AppData/Local/MiKTeX/pdftex/config/pdftex.map" 1635350063 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
@@ -45,14 +45,14 @@
   "C:/Users/sachi/AppData/Local/Programs/MiKTeX/tex/latex/tools/enumerate.sty" 1622550326 3468 068d84ef9735e15f11c5a120c0a1a139 ""
   "QA2a.png" 1637954657 22670 8e74eca2ea86d493577eaa65677c49c7 ""
   "QA2b.png" 1637955191 20079 fefa698dbccd0ffd357f736c3f72933d ""
-  "QA3b.png" 1637920891 41689 cb9f0070866e761af8a66c9c37b32a2c ""
+  "QA3b.png" 1637959039 39121 56c0f185e8429b70e1f37ab9f11f327b ""
   "QB2.png" 1637955793 53665 c1f22084eb7d9d4a50b1a45181ae97c0 ""
   "QB4_alpha=0.1.png" 1637951790 49070 d7c4a41f770858488458d685330cbaba ""
   "QB4_e=0.1.png" 1637951783 52438 e72fa0439de33b806c55735d82b68a56 ""
-  "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" 1637958185 16527 893a653440f3267845c6c931335b7c1d ""
+  "e:/Semesters/Sem5/COL333/COL333/A3/report.tex" 1637989191 16953 0ecaca14be3cb11e4c24e153f3fa4080 ""
   "instance.png" 1637950697 30723 e92c93a7d1cf548ad23ed62220ae34b0 ""
-  "report.aux" 1637958187 2750 68e9a1002076fd45143eaa80e6dc2cc4 "pdflatex"
-  "report.tex" 1637958185 16527 893a653440f3267845c6c931335b7c1d ""
+  "report.aux" 1637989195 2849 f1b08268177d1d7b94d9a17f5ef270a8 "pdflatex"
+  "report.tex" 1637989191 16953 0ecaca14be3cb11e4c24e153f3fa4080 ""
   (generated)
   "report.aux"
   "report.pdf"
